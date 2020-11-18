@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<robot name="ball" xmlns:xacro="http://ros.org/wiki/xacro">
+    <gazebo reference="base_link">
+        <mu1>10</mu1>
+        <mu2>1</mu2>
+        <kp>500.0</kp>
+        <kd>100</kd>
+        <minDepth>.001</minDepth>
+        <maxVel>1000</maxVel>
+        <material>Gazebo/Red</material>
+        <!-- <surface>
+            <bounce>
+                <restitution_coefficient>.5</restitution_coefficient>
+                <threshold>0.01</threshold>
+            </bounce>
+            <contact>
+                <ode>
+                    <max_vel>100000</max_vel>
+                </ode>
+            </contact>
+        </surface> -->
+    </gazebo>
+</robot>

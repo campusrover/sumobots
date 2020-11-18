@@ -67,7 +67,7 @@
       </link>
     </model>
     <physics name='default_physics' default='0' type='ode'>
-      <real_time_update_rate>0</real_time_update_rate>
+      <real_time_update_rate>1000</real_time_update_rate>
       <max_step_size>0.001</max_step_size>
       <real_time_factor>1</real_time_factor>
       <ode>
@@ -115,7 +115,7 @@
           <wrench>-228.675 -228.677 -2285.27 0 -0 0</wrench>
         </link>
         <link name='link_1'>
-          <pose frame=''>0.041707 -0.05704 0.139352 -2e-05 -2e-05 0</pose>
+          <pose frame=''>0.041707 -0.05704 0.148352 -2e-05 -2e-05 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
