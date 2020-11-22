@@ -101,21 +101,21 @@
       <heading_deg>0</heading_deg>
     </spherical_coordinates>
     <state world_name='default'>
-      <sim_time>505 717000000</sim_time>
-      <real_time>81 286486794</real_time>
-      <wall_time>1605477743 164486326</wall_time>
-      <iterations>505717</iterations>
+      <sim_time>15 613000000</sim_time>
+      <real_time>20 381481416</real_time>
+      <wall_time>1606065338 168072884</wall_time>
+      <iterations>15613</iterations>
       <model name='arena'>
-        <pose frame=''>0.04171 -0.057043 0.149997 2e-06 -2e-06 -0</pose>
+        <pose frame=''>0.041707 -0.057044 0.149997 2e-06 -2e-06 -0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>0.04171 -0.057043 0.149997 2e-06 -2e-06 -0</pose>
+          <pose frame=''>0.041707 -0.057044 0.149997 2e-06 -2e-06 -0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>-0.762249 -0.762256 -7.61755 -1.2015 1.2015 -4e-06</acceleration>
-          <wrench>-228.675 -228.677 -2285.27 0 -0 0</wrench>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
         </link>
         <link name='link_1'>
-          <pose frame=''>0.041707 -0.05704 0.148352 -2e-05 -2e-05 0</pose>
+          <pose frame=''>0.041707 -0.057044 0.149997 2e-06 -2e-06 -0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -198,8 +198,8 @@
           <surface>
             <friction>
               <ode>
-                <mu>1</mu>
-                <mu2>1</mu2>
+                <mu>10</mu>
+                <mu2>10</mu2>
                 <fdir1>0 0 0</fdir1>
                 <slip1>0</slip1>
                 <slip2>0</slip2>
@@ -256,7 +256,7 @@
           <pose frame=''>0 0 0 0 -0 0</pose>
         </inertial>
         <pose frame=''>0 0 0 0 -0 0</pose>
-        <gravity>0</gravity>
+        <gravity>1</gravity>
         <self_collide>0</self_collide>
         <kinematic>0</kinematic>
         <enable_wind>0</enable_wind>
@@ -265,7 +265,7 @@
           <geometry>
             <cylinder>
               <radius>1.6</radius>
-              <length>0.29</length>
+              <length>0.299</length>
             </cylinder>
           </geometry>
           <material>
@@ -285,10 +285,66 @@
           <transparency>0</transparency>
           <cast_shadows>1</cast_shadows>
         </visual>
+        <collision name='collision_0'>
+          <laser_retro>0</laser_retro>
+          <max_contacts>10</max_contacts>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>1.6</radius>
+              <length>0.299</length>
+            </cylinder>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1</mu>
+                <mu2>1</mu2>
+                <fdir1>0 0 0</fdir1>
+                <slip1>0</slip1>
+                <slip2>0</slip2>
+              </ode>
+              <torsional>
+                <coefficient>1</coefficient>
+                <patch_radius>0</patch_radius>
+                <surface_radius>0</surface_radius>
+                <use_patch_radius>1</use_patch_radius>
+                <ode>
+                  <slip>0</slip>
+                </ode>
+              </torsional>
+            </friction>
+            <bounce>
+              <restitution_coefficient>0</restitution_coefficient>
+              <threshold>1e+06</threshold>
+            </bounce>
+            <contact>
+              <collide_without_contact>0</collide_without_contact>
+              <collide_without_contact_bitmask>1</collide_without_contact_bitmask>
+              <collide_bitmask>1</collide_bitmask>
+              <ode>
+                <soft_cfm>0</soft_cfm>
+                <soft_erp>0.2</soft_erp>
+                <kp>1e+13</kp>
+                <kd>1</kd>
+                <max_vel>0.01</max_vel>
+                <min_depth>0</min_depth>
+              </ode>
+              <bullet>
+                <split_impulse>1</split_impulse>
+                <split_impulse_penetration_threshold>-0.01</split_impulse_penetration_threshold>
+                <soft_cfm>0</soft_cfm>
+                <soft_erp>0.2</soft_erp>
+                <kp>1e+13</kp>
+                <kd>1</kd>
+              </bullet>
+            </contact>
+          </surface>
+        </collision>
       </link>
       <static>0</static>
       <allow_auto_disable>1</allow_auto_disable>
-      <pose frame=''>0.041707 -0.05704 0.139352 -2e-05 -2e-05 0</pose>
+      <pose frame=''>0.041707 -0.057044 0.149997 2e-06 -2e-06 -0</pose>
     </model>
   </world>
 </sdf>
