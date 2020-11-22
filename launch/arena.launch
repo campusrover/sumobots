@@ -13,5 +13,15 @@
   </include>
 
   <include file="$(find sumobots)/launch/robots.launch"/>
+  <rosparam ns="/namespaces" param="$(arg robotnamespace)" subst_value="true" > $(arg robot_name) </rosparam>
+  
+  <node name="robot1_tf2_broadcaster" pkg="sumobots" type="broadcaster.py" respawn="false" output="screen" >
+    <param name="robot" type="string" value="robot1" />
+  </node>
+  <node name="robot2_tf2_broadcaster" pkg="sumobots" type="broadcaster.py" respawn="false" output="screen" >
+    <param name="robot" type="string" value="robot2" /> 
+  </node>
+
+  <node pkg="sumobots" type="listener.py" name="listener" output="screen"/>
   
 </launch>
