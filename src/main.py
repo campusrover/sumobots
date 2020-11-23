@@ -182,6 +182,7 @@ def test_action():
     k = 0
     while k < 50:
         obs_n, reward_n, done_n, _ = env.step(act_n)
+        print("---------------TEST-----------------")
         k += 1
 
 

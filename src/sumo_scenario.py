@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import rospy
+import rospy, math
 import numpy as np
 import tf2_ros
 from math import pi, atan2
@@ -40,11 +40,11 @@ class SumoScenario():
     def observation(self, robot_index):
         while True:
             try:
+                print('robot%d' % (robot_index + 1))
                 self_tf = self.tfBuffer.lookup_transform('world', 'robot%d' % (robot_index + 1), rospy.Time())
                 break
             except (tf2_ros.LookupException, tf2_ros.ConnectivityException,tf2_ros.ExtrapolationException):
                 self.rate.sleep()
-                continue
         dist = math.sqrt(self_tf.transform.translation.x ** 2 + self_tf.transform.translation.y ** 2)
         angle = math.atan2(self_tf.transform.translation.y, self_tf.transform.translation.x)
         center = [dist, angle]
@@ -61,7 +61,7 @@ class SumoScenario():
                 dist = math.sqrt(trans.transform.translation.x ** 2 + trans.transform.translation.y ** 2)
                 angle = math.atan2(trans.transform.translation.y, trans.transform.translation.x)
                 other.extend([dist, angle])
-        self.obs[robot_index] = np.concatenate(center + other)
+        self.obs[robot_index] = np.concatenate((center, other))
         return self.obs[robot_index]
 
     def done(self, robot_index):
