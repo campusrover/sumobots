@@ -2,8 +2,7 @@
 import os
 import sys
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
-sys.path.insert(2, os.path.join(sys.path[1], 'gym-gazebo'))
-sys.path.insert(3, os.path.join(sys.path[1], 'neat-python'))
+sys.path.insert(2, os.path.join(sys.path[1], 'neat-python'))
 import rospy
 from multiagent_env import MultiAgentGazeboEnv
 import pickle
