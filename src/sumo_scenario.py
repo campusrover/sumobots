@@ -10,6 +10,7 @@ from nav_msgs.msg import Odometry
 
 class SumoScenario():
     def __init__(self, num_robots=2):
+        self.rate = rospy.Rate(10.0)
         self.num_robots = num_robots
         self.tfBuffer = tf2_ros.Buffer()
         self.listener = tf2_ros.TransformListener(self.tfBuffer)
@@ -37,14 +38,26 @@ class SumoScenario():
         return False
 
     def observation(self, robot_index):
-        self_tf = self.tfBuffer.lookup_transform('world', 'robot%d' % (robot_index + 1), rospy.Time())
+        while True:
+            try:
+                self_tf = self.tfBuffer.lookup_transform('world', 'robot%d' % (robot_index + 1), rospy.Time())
+                break
+            except (tf2_ros.LookupException, tf2_ros.ConnectivityException,tf2_ros.ExtrapolationException):
+                self.rate.sleep()
+                continue
         dist = math.sqrt(self_tf.transform.translation.x ** 2 + self_tf.transform.translation.y ** 2)
         angle = math.atan2(self_tf.transform.translation.y, self_tf.transform.translation.x)
         center = [dist, angle]
         other = []
         for i in range(self.num_robots):
             if i != robot_index:
-                trans = self.tfBuffer.lookup_transform('robot%d' % (robot_index + 1), 'robot%d' (i + 1), rospy.Time())
+                while True:
+                    try:
+                        trans = self.tfBuffer.lookup_transform('robot%d' % (robot_index + 1), 'robot%d' (i + 1), rospy.Time())
+                        break
+                    except (tf2_ros.LookupException, tf2_ros.ConnectivityException,tf2_ros.ExtrapolationException):
+                        self.rate.sleep()
+                        continue
                 dist = math.sqrt(trans.transform.translation.x ** 2 + trans.transform.translation.y ** 2)
                 angle = math.atan2(trans.transform.translation.y, trans.transform.translation.x)
                 other.extend([dist, angle])
