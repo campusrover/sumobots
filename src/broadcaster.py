@@ -18,14 +18,14 @@ def handle_robot_pose(msg, robot_name):
     t.header.stamp = rospy.Time.now()
     t.header.frame_id = "world"
     t.child_frame_id = robot_name
-    t.transform.translation.x = msg.x
-    t.transform.translation.y = msg.y
-    t.transform.translation.z = 0.0
-    q = tf_conversions.transformations.quaternion_from_euler(0, 0, msg.theta)
-    t.transform.rotation.x = q[0]
-    t.transform.rotation.y = q[1]
-    t.transform.rotation.z = q[2]
-    t.transform.rotation.w = q[3]
+    msg = msg.pose.pose
+    t.transform.translation.x = msg.position.x
+    t.transform.translation.y = msg.position.y
+    t.transform.translation.z = msg.position.z
+    t.transform.rotation.x = msg.orientation.x
+    t.transform.rotation.y = msg.orientation.y
+    t.transform.rotation.z = msg.orientation.z
+    t.transform.rotation.w = msg.orientation.w
 
 # Publish the trandsform.
     br.sendTransform(t)
@@ -37,5 +37,5 @@ if __name__ == '__main__':
 # the robot name later.
     rospy.init_node('tf2_broadcaster')
     robot_name = rospy.get_param('~robot', 'robot1')
-    rospy.Subscriber('/%s/pose' % robot_name, Odometry.pose.pose, handle_robot_pose, robot_name)
+    rospy.Subscriber('/%s/odom' % robot_name, Odometry, handle_robot_pose, robot_name)
     rospy.spin()

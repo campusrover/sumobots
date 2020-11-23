@@ -175,10 +175,10 @@ def play_winners():
 
 
 def test_action():
-    env = MultiAgentGazeboEnv('~/catkin_ws/src/sumobots/launch/single_agent.launch')
     scenario = SumoScenario(num_robots=1)
-    env.set_callbacks(reward_callback=scenario.reward, observation_callback=scenario.observation,
-                      done_callback=scenario.done)
+    env = MultiAgentGazeboEnv(reward_callback=scenario.reward,
+                              observation_callback=scenario.observation,
+                              done_callback=scenario.done)
     act_n = [[[0, 0, 0, 1.0]]]
     k = 0
     while k < 50:
@@ -187,6 +187,7 @@ def test_action():
 
 
 if __name__ == '__main__':
+    rospy.init_node('sumo')
     #run()
     #play_winners()
     test_action()

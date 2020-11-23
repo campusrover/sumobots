@@ -1,85 +1,45 @@
 import gym
 import rospy
-import roslaunch
-import time
 import numpy as np
-from gym import utils, spaces
-#from gym_gazebo.spaces import multi_discrete
-from gym_gazebo.envs import gazebo_env
-from geometry_msgs.msg import Twist
-from std_srvs.srv import Empty
-
-from sensor_msgs.msg import LaserScan
-
+from gym import spaces
 from gym.utils import seeding
+from std_srvs.srv import Empty
+from geometry_msgs.msg import Twist
+from nav_msgs.msg import Odometry
 
-class MultiAgentGazeboEnv(gazebo_env.GazeboEnv):
+class MultiAgentGazeboEnv():
 
-    def __init__(self, launchfile):
-        # Launch the simulation with the given launchfile name
-        # Launch file must include the following line:
-        #       <rosparam ns="/namespaces" param="$(arg robot_name)" subst_value="true" > $(arg robot_name) </rosparam>
-        gazebo_env.GazeboEnv.__init__(self, launchfile)
+    def __init__(self, reset_callback=None,
+                       reward_callback=None,
+                       observation_callback=None,
+                       info_callback=None,
+                       done_callback=None):
         # scenario callbacks
-        self.set_callbacks()
-        self.num_agents = 0
-        self.vel_pubs = []
-        for i, robot_name in rospy.get_param('/namespaces'):
-            self.num_agents += 1
-            self.vel_pubs.append(rospy.Publisher('/%s/cmd_vel' % robot_name, Twist, queue_size=1))
-        self.linear_speed = 1.8
-        self.angular_speed = 1.8
-        self.unpause = rospy.ServiceProxy('/gazebo/unpause_physics', Empty)
-        self.pause = rospy.ServiceProxy('/gazebo/pause_physics', Empty)
-        self.reset_proxy = rospy.ServiceProxy('/gazebo/reset_simulation', Empty)
-        # environment parameters
-        self.discrete_action_space = True
-        # if true, action is a number 0...N, otherwise action is a one-hot N-dimensional vector
-        self.discrete_action_input = False
-        # configure spaces
-        self.action_space = []
-        self.observation_space = []
-        for agent in range(self.num_agents):
-            total_action_space = []
-            # physical action space
-            if self.discrete_action_space:
-                u_action_space = spaces.Discrete(4)
-            #else:
-                # TODO: implement continuous action space
-            total_action_space.append(u_action_space)
-            # communication action space
-            # if self.discrete_action_space:
-            #     c_action_space = spaces.Discrete(world.dim_c)
-            # else:
-            #     c_action_space = spaces.Box(low=0.0, high=1.0, shape=(world.dim_c,), dtype=np.float32)
-            # if not agent.silent:
-            #     total_action_space.append(c_action_space)
-            # total action space
-            # if len(total_action_space) > 1:
-            #     # all action spaces are discrete, so simplify to MultiDiscrete action space
-            #     if all([isinstance(act_space, spaces.Discrete) for act_space in total_action_space]):
-            #         act_space = multi_discrete.MultiDiscrete([[0, act_space.n - 1] for act_space in total_action_space])
-            #     else:
-            #         act_space = spaces.Tuple(total_action_space)
-            #     self.action_space.append(act_space)
-            # else:
-            self.action_space.append(total_action_space[0])
-            # observation space
-            obs_dim = len(observation_callback(agent))
-            self.observation_space.append(spaces.Box(low=-np.inf, high=+np.inf, shape=(obs_dim,), dtype=np.float32))
-            agent.action.c = np.zeros(self.world.dim_c)
-        spaces.Discrete(4) #F,B,L,R
-        self.reward_range = (-np.inf, np.inf)
-
-        self._seed()
-
-    def set_callbacks(reset_callback=None, reward_callback=None, observation_callback=None,
-                      info_callback=None, done_callback=None):
         self.reset_callback = reset_callback
         self.reward_callback = reward_callback
         self.observation_callback = observation_callback
         self.info_callback = info_callback
         self.done_callback = done_callback
+        self.num_agents = 0
+        self.vel_pubs = []
+        for i, robot_name in enumerate(['robot1']):
+            self.num_agents += 1
+            self.vel_pubs.append(rospy.Publisher('/%s/cmd_vel' % robot_name, Twist, queue_size=1))
+        self.linear_speed = 2.0
+        self.angular_speed = 2.0
+        self.unpause = rospy.ServiceProxy('/gazebo/unpause_physics', Empty)
+        self.pause = rospy.ServiceProxy('/gazebo/pause_physics', Empty)
+        self.reset_proxy = rospy.ServiceProxy('/gazebo/reset_simulation', Empty)
+        # configure spaces
+        self.action_space = []
+        self.observation_space = []
+        for agent in range(self.num_agents):
+            self.action_space.append([spaces.Discrete(4)])
+            # observation space
+            obs_dim = len(self.observation_callback(agent))
+            self.observation_space.append(spaces.Box(low=-np.inf, high=+np.inf, shape=(obs_dim,), dtype=np.float32))
+        self.reward_range = (-np.inf, np.inf)
+        self._seed()
 
     def _seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -103,13 +63,13 @@ class MultiAgentGazeboEnv(gazebo_env.GazeboEnv):
         data = None
         while data is None:
             try:
-                data = rospy.wait_for_message('/scan', LaserScan, timeout=5)
+                print("none")
+                data = rospy.wait_for_message('/odom', Odometry, timeout=5)
             except:
                 pass
 
         rospy.wait_for_service('/gazebo/pause_physics')
         try:
-            #resp_pause = pause.call()
             self.pause()
         except (rospy.ServiceException) as e:
             print ("/gazebo/pause_physics service call failed")
@@ -124,7 +84,6 @@ class MultiAgentGazeboEnv(gazebo_env.GazeboEnv):
         return obs_n, reward_n, done_n, info_n
 
     def reset(self):
-
         # Resets the state of the environment and returns an initial observation.
         rospy.wait_for_service('/gazebo/reset_simulation')
         try:
@@ -145,13 +104,12 @@ class MultiAgentGazeboEnv(gazebo_env.GazeboEnv):
         data = None
         while data is None:
             try:
-                data = rospy.wait_for_message('/scan', LaserScan, timeout=5)
+                data = rospy.wait_for_message('/odom', Odometry, timeout=5)
             except:
                 pass
 
         rospy.wait_for_service('/gazebo/pause_physics')
         try:
-            #resp_pause = pause.call()
             self.pause()
         except (rospy.ServiceException) as e:
             print ("/gazebo/pause_physics service call failed")
@@ -188,38 +146,6 @@ class MultiAgentGazeboEnv(gazebo_env.GazeboEnv):
     # set env action for a particular agent
     def _set_action(self, action, agent):
         t = Twist()
-        # process action
-        # if isinstance(action_space, MultiDiscrete):
-        #     act = []
-        #     size = action_space.high - action_space.low + 1
-        #     index = 0
-        #     for s in size:
-        #         act.append(action[index:(index+s)])
-        #         index += s
-        #     action = act
-        # else:
-        #     action = [action]
-
-        # physical action
-        if self.discrete_action_input:
-            # process discrete action
-            if action[0] == 1: t.linear.x = self.linear_speed
-            if action[0] == 2: t.linear.x = -self.linear_speed
-            if action[0] == 3: t.angular.z = self.angular_speed
-            if action[0] == 4: t.angular.z = -self.angular_speed
-        else:
-            if self.discrete_action_space:
-                t.linear.x = (action[0][0] - action[0][1]) * self.linear_speed
-                t.angular.z = (action[0][2] - action[0][3]) * self.angular_speed
-            #else:
-                # TODO: implement for continuous action space
-        
-        # if not agent.silent:
-        #     # communication action
-        #     if self.discrete_action_input:
-        #         agent.action.c = np.zeros(self.world.dim_c)
-        #         agent.action.c[action[0]] = 1.0
-        #     else:
-        #         agent.action.c = action[0]
-        #     action = action[1:]
+        t.linear.x = (action[0][0] - action[0][1]) * self.linear_speed
+        t.angular.z = (action[0][2] - action[0][3]) * self.angular_speed
         self.vel_pubs[agent].publish(t)

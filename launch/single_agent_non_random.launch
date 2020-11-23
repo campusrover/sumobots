@@ -6,7 +6,7 @@
     command="$(find xacro)/xacro.py $(find sumobots)/urdf/turtle.urdf.xacro" />
     <include file="$(find sumobots)/launch/one_robot.launch" >
         <arg name="init_pose" value="-x 1 -y 0 -z 0.35 -Y 1.5707"/>
-        <arg name="robot_name"  value="Robot1" />
+        <arg name="robot_name"  value="robot1" />
     </include>
 
 </launch>

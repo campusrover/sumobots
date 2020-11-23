@@ -1,5 +1,4 @@
 <launch>
-
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="world_name" value="$(find sumobots)/worlds/sumo_arena.world"/>
     <arg name="paused" value="false"/>
@@ -10,12 +9,11 @@
   </include>
 
   <include file="$(find sumobots)/launch/single_agent_non_random.launch"/>
-  <!-- <rosparam ns="/namespaces" param="$(arg robotnamespace)" subst_value="true" > $(arg robot_name) </rosparam>
   
-  <node name="robot1_tf2_broadcaster" pkg="sumobots" type="broadcaster.py" respawn="false" output="screen" >
+  <node name="robot1_tf2_broadcaster" pkg="sumobots" type="broadcaster.py" respawn="false" output="log" >
     <param name="robot" type="string" value="robot1" />
   </node>
-
-  <node pkg="sumobots" type="listener.py" name="listener" output="screen"/> -->
+  <node name="main" pkg="sumobots" type="main.py" output="screen"/>
+  <!-- <rosparam ns="/namespaces" param="$(arg robotnamespace)" subst_value="true" > $(arg robot_name) </rosparam> -->
   
 </launch>

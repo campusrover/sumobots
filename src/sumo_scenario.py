@@ -14,12 +14,9 @@ class SumoScenario():
         self.tfBuffer = tf2_ros.Buffer()
         self.listener = tf2_ros.TransformListener(self.tfBuffer)
         self.obs = []
-        # self.odom_subs = []
         for i in range(self.num_robots):
             self.obs.append([0,0])
-        #     robot_name = 'robot%d' % (i + 1)
-        #     self.odom_subs.append(rospy.Subscriber('%s/odom' % robot_name, Odometry, odom_cb, i))
-
+        
     def reward(self, robot_index):
         # rew = 0
         # for i in range(self.num_robots):
@@ -40,7 +37,7 @@ class SumoScenario():
         return False
 
     def observation(self, robot_index):
-        self_tf = self.tfBuffer.lookup_transform('robot%d' % (robot_index + 1), 'world', rospy.Time())
+        self_tf = self.tfBuffer.lookup_transform('world', 'robot%d' % (robot_index + 1), rospy.Time())
         dist = math.sqrt(self_tf.transform.translation.x ** 2 + self_tf.transform.translation.y ** 2)
         angle = math.atan2(self_tf.transform.translation.y, self_tf.transform.translation.x)
         center = [dist, angle]
@@ -59,11 +56,3 @@ class SumoScenario():
             if self.boundary(i):
                 return True
         return False
-
-    # def odom_cb(msg, robot_index):
-    #     x = msg.pose.pose.position.x
-    #     y = msg.pose.pose.position.y
-    #     orientation_q = msg.pose.pose.orientation
-    #     orientation_list = [orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w]
-    #     (roll, pitch, yaw) = euler_from_quaternion(orientation_list)
-    #     self.obs[robot_index] = [x, y, yaw]
