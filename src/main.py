@@ -11,6 +11,7 @@ import numpy as np
 from itertools import izip_longest as zip_longest
 import random
 from datetime import datetime
+from operator import attrgetter
 
 
 def fitness_function(envs, pops):
