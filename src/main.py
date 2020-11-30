@@ -8,8 +8,6 @@ from ecosystem import Ecosystem
 import neat
 import visualize
 import numpy as np
-from itertools import izip_longest as zip_longest
-import random
 from datetime import datetime
 from operator import attrgetter
 
@@ -53,6 +51,9 @@ def eval_genomes(genomes, env, configs):
             # step environment
             obs_n, reward_n, done_n, _ = env.step(act_n)
             total_reward_n = [a + b for a, b in zip(total_reward_n, reward_n)]
+            if any(done_n):
+                obs_n = env.reset()
+                break
         obs_n = env.reset()
         fitnesses.append(total_reward_n)
         total_reward_n = [0] * env.num_agents
@@ -100,7 +101,7 @@ def run():
     time = datetime.now().strftime("%m%d%Y_%H%M%S")  # current date and time in string format
 
     # Create new directory in which to save results
-    path = '../results/%s_%d' % (time, num_gen)
+    path = '../catkin_ws/src/sumobots/results/%s_%d' % (time, num_gen)
     os.mkdir(path)
 
     # Save results
@@ -133,35 +134,41 @@ def play_winners():
                                   observation_callback=scenario.observation,
                                   done_callback=scenario.done)
         environments.append(env)
-    path = 'results/11172020_175028_500'
+    
+    path = '../catkin_ws/src/sumobots/results/11302020_192730_2'
     configs = []
     winners = []
     for i in range(sum(eco_structure[0])):
-        local_dir = os.path.dirname(__file__)
-        config_path = os.path.join(local_dir, path + '/config_' + str(i + 1))
+        config_path = path + '/config_%d' % (i + 1)
+        print(config_path)
         config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
                              neat.DefaultSpeciesSet, neat.DefaultStagnation,
                              config_path)
         configs.append(config)
-        winner = pickle.load(open(path + '/genome_' + str(i + 1), 'rb'))
+        winner = pickle.load(open(path + '/genome_%d' % (i + 1), 'rb'))
         winners.append(winner)
     nets = []
     for i, genome in enumerate(winners):
         nets.append(neat.nn.FeedForwardNetwork.create(genome, configs[i]))
     env = environments[0]
     # execution loop
+    total_reward_n = [0] * env.num_agents
     obs_n = env.reset()
-    steps_per_run = 200
-    while True:
+    steps_per_run = 60
+    while not rospy.is_shutdown():
         for _ in range(steps_per_run):
             # query for action from each agent's policy
             act_n = []
             for i, net in enumerate(nets):
                 actions = net.activate(obs_n[i])
                 actions = [1.0 if a >= 0.5 else 0 for a in actions]
-                act_n.append(np.concatenate([actions, np.zeros(env.world.dim_c)]))
+                act_n.append([actions])
             # step environment
             obs_n, reward_n, done_n, _ = env.step(act_n)
+            total_reward_n = [a + b for a, b in zip(total_reward_n, reward_n)]
+            if any(done_n):
+                obs_n = env.reset()
+                break
         obs_n = env.reset()
 
 
