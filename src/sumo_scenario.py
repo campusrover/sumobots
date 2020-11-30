@@ -25,7 +25,7 @@ class SumoScenario():
         #         rew += 5
         # rew -= 0.5 * (rospy.get_time() - self.init_time)
         rew = 0
-        if boundary(robot_index):
+        if self.boundary(robot_index):
             rew -= 10
         else:
             rew -= self.obs[robot_index][0]
@@ -40,7 +40,6 @@ class SumoScenario():
     def observation(self, robot_index):
         while True:
             try:
-                print('robot%d' % (robot_index + 1))
                 self_tf = self.tfBuffer.lookup_transform('world', 'robot%d' % (robot_index + 1), rospy.Time())
                 break
             except (tf2_ros.LookupException, tf2_ros.ConnectivityException,tf2_ros.ExtrapolationException):

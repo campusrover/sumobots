@@ -1,8 +1,5 @@
-import gym
 import rospy
 import numpy as np
-from gym import spaces
-from gym.utils import seeding
 from std_srvs.srv import Empty
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
@@ -30,20 +27,6 @@ class MultiAgentGazeboEnv():
         self.unpause = rospy.ServiceProxy('/gazebo/unpause_physics', Empty)
         self.pause = rospy.ServiceProxy('/gazebo/pause_physics', Empty)
         self.reset_proxy = rospy.ServiceProxy('/gazebo/reset_simulation', Empty)
-        # configure spaces
-        self.action_space = []
-        self.observation_space = []
-        for agent in range(self.num_agents):
-            self.action_space.append([spaces.Discrete(4)])
-            # observation space
-            obs_dim = len(self.observation_callback(agent))
-            self.observation_space.append(spaces.Box(low=-np.inf, high=+np.inf, shape=(obs_dim,), dtype=np.float32))
-        self.reward_range = (-np.inf, np.inf)
-        self._seed()
-
-    def _seed(self, seed=None):
-        self.np_random, seed = seeding.np_random(seed)
-        return [seed]
 
     def step(self, action_n):
         obs_n = []
@@ -60,13 +43,13 @@ class MultiAgentGazeboEnv():
         for i, action in enumerate(action_n):
             self._set_action(action, i)
 
-        data = None
-        while data is None:
-            try:
-                print("none")
-                data = rospy.wait_for_message('/odom', Odometry, timeout=5)
-            except:
-                pass
+        for i in range(self.num_agents):
+            data = None
+            while data is None:
+                try:
+                    data = rospy.wait_for_message('robot%d/odom' % (i + 1), Odometry, timeout=5)
+                except:
+                    pass   
 
         rospy.wait_for_service('/gazebo/pause_physics')
         try:
@@ -74,7 +57,7 @@ class MultiAgentGazeboEnv():
         except (rospy.ServiceException) as e:
             print ("/gazebo/pause_physics service call failed")
 
-        # record observation for each agent
+        # record observation, etc. for each agent
         for i, _ in enumerate(action_n):
             obs_n.append(self._get_obs(i))
             reward_n.append(self._get_reward(i))
@@ -85,6 +68,8 @@ class MultiAgentGazeboEnv():
 
     def reset(self):
         # Resets the state of the environment and returns an initial observation.
+        obs_n = []
+        
         rospy.wait_for_service('/gazebo/reset_simulation')
         try:
             #reset_proxy.call()
@@ -100,13 +85,13 @@ class MultiAgentGazeboEnv():
         except (rospy.ServiceException) as e:
             print ("/gazebo/unpause_physics service call failed")
 
-        #read laser data
-        data = None
-        while data is None:
-            try:
-                data = rospy.wait_for_message('/odom', Odometry, timeout=5)
-            except:
-                pass
+        for i in range(self.num_agents):
+            data = None
+            while data is None:
+                try:
+                    data = rospy.wait_for_message('robot%d/odom' % (i + 1), Odometry, timeout=5)
+                except:
+                    pass
 
         rospy.wait_for_service('/gazebo/pause_physics')
         try:

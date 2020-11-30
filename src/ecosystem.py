@@ -29,10 +29,7 @@ class Ecosystem():
         the genomes themselves (apart from updating the fitness member),
         or the configuration object.
         """
-
-        # if self.config_1_agents.no_fitness_termination and (n is None):
-        #     raise RuntimeError("Cannot have no generational limit with no fitness termination")
-
+        
         flattened_pops = [p for ps in self.pops for p in ps]
         k = 0
         while n is None or k < n:

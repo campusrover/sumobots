@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 import os
-import sys
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
-sys.path.insert(2, os.path.join(sys.path[1], 'neat-python'))
 import rospy
 from multiagent_env import MultiAgentGazeboEnv
 import pickle
@@ -18,19 +15,20 @@ from datetime import datetime
 
 def fitness_function(envs, pops):
     for i, env_pops in enumerate(pops):
-        populations = []
         configs = []
+        genomes = []
+        best_genomes = []
         for j, pop in enumerate(env_pops):
             configs.append(pop.config)
             temp = list(pop.population.values())
-            random.shuffle(temp)
-            populations.append(temp)
-        # Line up populations to form genome sets to evaluate on the given environment
-        # TODO: This needs a more general solution
-        smaller_pop = np.argmin([len(p) for p in populations])
-        genome_sets = zip_longest(*populations, fillvalue=populations[smaller_pop][0])
-        for gs in genome_sets:
-            eval_genomes(gs, envs[i], configs)
+            genomes.append(temp)
+            genomes_with_fitness = [t for t in temp if t.fitness is not None]
+            if len(genomes_with_fitness) > 0:
+                best_genomes.append(max(genomes_with_fitness, key=attrgetter('fitness')))
+        for j in range(len(genomes)):
+            for k in range(len(genomes[j])):
+                genome_set = best_genomes[0:j] + [genomes[j][k]] + best_genomes[(j+1):]
+                eval_genomes(genome_set, envs[i], configs)
 
 
 def eval_genomes(genomes, env, configs):
@@ -39,9 +37,9 @@ def eval_genomes(genomes, env, configs):
         nets.append(neat.nn.FeedForwardNetwork.create(genome, configs[i]))
     # execution loop
     obs_n = env.reset()
-    total_reward_n = [0] * len(env.num_agents)
+    total_reward_n = [0] * env.num_agents
     fitnesses = []
-    num_runs = 5
+    num_runs = 1
     steps_per_run = 60
     for _ in range(num_runs):
         for _ in range(steps_per_run):
@@ -56,7 +54,7 @@ def eval_genomes(genomes, env, configs):
             total_reward_n = [a + b for a, b in zip(total_reward_n, reward_n)]
         obs_n = env.reset()
         fitnesses.append(total_reward_n)
-        total_reward_n = [0] * len(env.world.agents)
+        total_reward_n = [0] * env.num_agents
     for i, genome in enumerate(genomes):
         genome.fitness = min([f[i] for f in fitnesses])
 
@@ -73,14 +71,13 @@ def run():
     configs = []
     for e in eco_structure:
         scenario = SumoScenario(num_robots=sum(e))
-        env = MultiAgentGazeboEnv('/launch/single_agent.launch',
-                            reward_callback=scenario.reward,
-                            observation_callback=scenario.observation,
-                            done_callback=scenario.done)
+        env = MultiAgentGazeboEnv(reward_callback=scenario.reward,
+                                  observation_callback=scenario.observation,
+                                  done_callback=scenario.done)
         environments.append(env)
         env_pops = []
         for _ in range(sum(e)):
-            # Load the config_1_agents file, which is assumed to live in
+            # Load the config file, which is assumed to live in
             # the same directory as this script.
             local_dir = os.path.dirname(__file__)
             config_path = os.path.join(local_dir, 'config_%d_agents' % sum(e))
@@ -110,19 +107,14 @@ def run():
         with open(path + '/genome_%d' % (i + 1), 'wb') as f:
             pickle.dump(winner, f)
         configs[i].save(path + '/config_%d' % (i + 1))
-        node_names = {0: 'stay',
-                      1: 'right',
+        node_names = {0: 'forward',
+                      1: 'backward',
                       2: 'left',
-                      3: 'forward',
-                      4: 'backward',
-                      -1: 'x_self',
-                      -2: 'y_self',
-                      -3: 'x_landmark_1',
-                      -4: 'y_landmark_1',
-                      -5: 'x_landmark_2',
-                      -6: 'y_landmark_2',
-                      -7: 'x_other',
-                      -8: 'y_other'
+                      3: 'right',
+                      -1: 'center_dist',
+                      -2: 'center_dir',
+                      -3: 'other_dist',
+                      -4: 'other_dir'
                       }
         visualize.draw_net(configs[i], winner, True, filename=path + "/nn_%d.svg" % (i + 1), node_names=node_names)
         visualize.plot_stats(stats[i], ylog=True, view=True, filename=path + "/fitness_%d.svg" % (i + 1))
@@ -136,10 +128,9 @@ def play_winners():
     environments = []
     for e in eco_structure:
         scenario = SumoScenario(num_robots=sum(e))
-        env = MultiAgentGazeboEnv('/launch/single_agent.launch',
-                            reward_callback=scenario.reward,
-                            observation_callback=scenario.observation,
-                            done_callback=scenario.done)
+        env = MultiAgentGazeboEnv(reward_callback=scenario.reward,
+                                  observation_callback=scenario.observation,
+                                  done_callback=scenario.done)
         environments.append(env)
     path = 'results/11172020_175028_500'
     configs = []
@@ -178,18 +169,17 @@ def test_action():
     env = MultiAgentGazeboEnv(reward_callback=scenario.reward,
                               observation_callback=scenario.observation,
                               done_callback=scenario.done)
-    act_n = [[[0, 0, 0, 1.0]]]
+    act_n = [[[1.0, 0, 1.0, 0]]]
     k = 0
     while k < 50:
         obs_n, reward_n, done_n, _ = env.step(act_n)
-        print("---------------TEST-----------------")
         k += 1
 
 
 if __name__ == '__main__':
     rospy.init_node('sumo')
-    #run()
+    run()
     #play_winners()
-    test_action()
+    #test_action()
 
 
