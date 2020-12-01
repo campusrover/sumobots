@@ -28,12 +28,12 @@ class SumoScenario():
         if self.boundary(robot_index):
             rew -= 10
         else:
-            rew -= self.obs[robot_index][0]
+            rew -= 0.01 * self.obs[robot_index][0]
         return rew
 
     # agent penalty for exiting the sumo arena
     def boundary(self, robot_index):
-        if self.obs[robot_index][0] > 1.4:
+        if self.obs[robot_index][0] > 1.5:
             return True
         return False
 
@@ -65,6 +65,6 @@ class SumoScenario():
 
     def done(self, robot_index):
         for i in range(self.num_robots):
-            if self.boundary(i):
+            if self.boundary(i) or self.obs[robot_index][0] < 0.1:
                 return True
         return False

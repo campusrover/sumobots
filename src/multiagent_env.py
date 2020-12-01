@@ -23,7 +23,7 @@ class MultiAgentGazeboEnv():
             self.num_agents += 1
             self.vel_pubs.append(rospy.Publisher('/%s/cmd_vel' % robot_name, Twist, queue_size=1))
         self.linear_speed = 2.0
-        self.angular_speed = 2.0
+        self.angular_speed = 1.0
         self.unpause = rospy.ServiceProxy('/gazebo/unpause_physics', Empty)
         self.pause = rospy.ServiceProxy('/gazebo/pause_physics', Empty)
         self.reset_proxy = rospy.ServiceProxy('/gazebo/reset_simulation', Empty)
@@ -69,7 +69,7 @@ class MultiAgentGazeboEnv():
     def reset(self):
         # Resets the state of the environment and returns an initial observation.
         obs_n = []
-        
+
         rospy.wait_for_service('/gazebo/reset_simulation')
         try:
             #reset_proxy.call()

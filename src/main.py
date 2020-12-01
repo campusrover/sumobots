@@ -94,7 +94,7 @@ def run():
             env_pops.append(pop)
             stats.append(s)
         populations.append(env_pops)
-    num_gen = 20
+    num_gen = 50
     ecosystem = Ecosystem(environments, populations)
     best_genomes = ecosystem.run(fitness_function, n=num_gen)
 
@@ -135,7 +135,16 @@ def play_winners():
                                   done_callback=scenario.done)
         environments.append(env)
     
-    path = '../catkin_ws/src/sumobots/results/11302020_192730_2'
+    node_names = {0: 'forward',
+                  1: 'backward',
+                  2: 'left',
+                  3: 'right',
+                  -1: 'center_dist',
+                  -2: 'center_dir',
+                  -3: 'other_dist',
+                  -4: 'other_dir'
+                  }
+    path = '../catkin_ws/src/sumobots/results/11302020_230953_100'
     configs = []
     winners = []
     for i in range(sum(eco_structure[0])):
@@ -177,11 +186,11 @@ def test_action():
     env = MultiAgentGazeboEnv(reward_callback=scenario.reward,
                               observation_callback=scenario.observation,
                               done_callback=scenario.done)
-    act_n = [[[1.0, 0, 1.0, 0]]]
-    k = 0
-    while k < 50:
+    act_n = [[[0, 0, 1.0, 0]]]
+    while not rospy.is_shutdown():
         obs_n, reward_n, done_n, _ = env.step(act_n)
-        k += 1
+        if any(done_n):
+            obs_n = env.reset()
 
 
 if __name__ == '__main__':
