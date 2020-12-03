@@ -56,13 +56,13 @@
     <material>Gazebo/FlatBlack</material>
   </gazebo>
 
-  <gazebo reference="imu_link">
+  <!-- <gazebo reference="imu_link">
     <sensor type="imu" name="imu">
       <always_on>true</always_on>
       <visualize>$(arg imu_visual)</visualize>
     </sensor>
     <material>Gazebo/Grey</material>
-  </gazebo>
+  </gazebo> -->
 
   <gazebo>
     <plugin name="turtlebot3_waffle_controller" filename="libgazebo_ros_diff_drive.so">
@@ -87,7 +87,7 @@
     </plugin>
   </gazebo>
 
-  <gazebo>
+  <!-- <gazebo>
     <plugin name="imu_plugin" filename="libgazebo_ros_imu.so">
       <alwaysOn>true</alwaysOn>
       <bodyName>imu_link</bodyName>
@@ -114,7 +114,7 @@
         </noise>
       </imu>
     </plugin>
-  </gazebo>
+  </gazebo> -->
 
   <!-- <gazebo reference="base_scan">
     <material>Gazebo/FlatBlack</material>

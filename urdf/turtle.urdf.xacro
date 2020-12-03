@@ -49,13 +49,13 @@
   </joint>
 
   <link name="wheel_left_link">
-    <visual>
+    <!-- <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
         <cylinder length="0.018" radius="0.033"/>
       </geometry>
       <material name="dark"/>
-    </visual>
+    </visual> -->
 
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -70,7 +70,7 @@
       <inertia ixx="1.1175580e-05" ixy="-4.2369783e-11" ixz="-5.9381719e-09"
                iyy="1.1192413e-05" iyz="-1.4400107e-11"
                izz="2.0712558e-05" />
-      </inertial>
+    </inertial>
   </link>
 
   <joint name="wheel_right_joint" type="continuous">
@@ -81,13 +81,13 @@
   </joint>
 
   <link name="wheel_right_link">
-    <visual>
+    <!-- <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
         <cylinder length="0.018" radius="0.033"/>
       </geometry>
       <material name="dark"/>
-    </visual>
+    </visual> -->
 
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -102,7 +102,7 @@
       <inertia ixx="1.1175580e-05" ixy="-4.2369783e-11" ixz="-5.9381719e-09"
                iyy="1.1192413e-05" iyz="-1.4400107e-11"
                izz="2.0712558e-05" />
-      </inertial>
+    </inertial>
   </link>
 
   <joint name="caster_back_right_joint" type="fixed">
@@ -151,28 +151,28 @@
     </inertial>
   </link>
 
-  <joint name="imu_joint" type="fixed">
+  <!-- <joint name="imu_joint" type="fixed">
     <parent link="base_link"/>
     <child link="imu_link"/>
     <origin xyz="0.0 0 0.068" rpy="0 0 0"/>
   </joint>
 
-  <link name="imu_link"/>
+  <link name="imu_link"/> -->
 
-  <joint name="scan_joint" type="fixed">
+  <!-- <joint name="scan_joint" type="fixed">
     <parent link="base_link"/>
     <child link="base_scan"/>
     <origin xyz="-0.064 0 0.122" rpy="0 0 0"/>
-  </joint>
+  </joint> -->
 
-  <link name="base_scan">
-    <!-- <visual>
+  <!-- <link name="base_scan">
+    <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
         <mesh filename="package://turtlebot3_description/meshes/sensors/lds.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="dark"/>
-    </visual> -->
+    </visual>
 
     <collision>
       <origin xyz="0.015 0 -0.0065" rpy="0 0 0"/>
@@ -188,21 +188,21 @@
                iyy="0.001" iyz="0.0"
                izz="0.001" />
     </inertial>
-  </link>
+  </link> -->
 
-  <joint name="camera_joint" type="fixed">
+  <!-- <joint name="camera_joint" type="fixed">
     <origin xyz="0.064 -0.065 0.094" rpy="0 0 0"/>
     <parent link="base_link"/>
     <child link="camera_link"/>
   </joint>
 
   <link name="camera_link">
-    <!-- <visual>
+    <visual>
      <origin xyz="0 0 0" rpy="1.57 0 1.57"/>
       <geometry>
        <mesh filename="package://turtlebot3_description/meshes/sensors/r200.dae" />
       </geometry>
-    </visual> -->
+    </visual>
     <collision>
       <origin xyz="0.003 0.065 0.007" rpy="0 0 0"/>
       <geometry>
@@ -210,14 +210,14 @@
       </geometry>
     </collision>
 
-    <!-- This inertial field needs doesn't contain reliable data!! -->
-<!--   <inertial>
+    This inertial field needs doesn't contain reliable data!!
+  <inertial>
       <mass value="0.564" />
       <origin xyz="0 0 0" />
       <inertia ixx="0.003881243" ixy="0.0" ixz="0.0"
                iyy="0.000498940" iyz="0.0"
                izz="0.003879257" />
-    </inertial>-->
+    </inertial>
   </link>
 
   <joint name="camera_rgb_joint" type="fixed">
@@ -246,6 +246,6 @@
     <parent link="camera_depth_frame"/>
     <child link="camera_depth_optical_frame"/>
   </joint>
-  <link name="camera_depth_optical_frame"/>
+  <link name="camera_depth_optical_frame"/> -->
 
 </robot>
