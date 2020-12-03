@@ -85,7 +85,7 @@ def run():
         configs.append(config)
         stats.append(s)
 
-    num_gen = 1
+    num_gen = 100
     ecosystem = Ecosystem(env, populations)
     best_genomes = ecosystem.run(fitness_function, n=num_gen)
 
