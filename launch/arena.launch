@@ -20,5 +20,6 @@
   <node name="robot2_tf2_broadcaster" pkg="sumobots" type="broadcaster.py" respawn="false" output="screen" >
     <param name="robot" type="string" value="robot2" /> 
   </node>
+  <node name="main" pkg="sumobots" type="main.py" output="screen"/>
 
 </launch>

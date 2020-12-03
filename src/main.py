@@ -10,30 +10,26 @@ import visualize
 import numpy as np
 from datetime import datetime
 from operator import attrgetter
+from itertools import izip_longest
+import random
 
 
-def fitness_function(envs, pops):
-    for i, env_pops in enumerate(pops):
-        configs = []
-        genomes = []
-        best_genomes = []
-        for j, pop in enumerate(env_pops):
-            configs.append(pop.config)
-            temp = list(pop.population.values())
-            genomes.append(temp)
-            genomes_with_fitness = [t for t in temp if t.fitness is not None]
-            if len(genomes_with_fitness) > 0:
-                best_genomes.append(max(genomes_with_fitness, key=attrgetter('fitness')))
-        for j in range(len(genomes)):
-            for k in range(len(genomes[j])):
-                genome_set = best_genomes[0:j] + [genomes[j][k]] + best_genomes[(j+1):]
-                eval_genomes(genome_set, envs[i], configs)
+def fitness_function(env, pops):
+    configs = []
+    best_genomes = []
+    for pop in pops:
+        configs.append(pop.config)
+        genomes = list(pop.population.values())
+        random.shuffle(genomes)
+        genome_set = izip_longest(genomes[0:(len(genomes)//2)], genomes[(len(genomes)//2):], fillvalue=genomes[0])
+    for gs in genome_set:
+        eval_genomes(gs, env, pop.config)
 
 
-def eval_genomes(genomes, env, configs):
+def eval_genomes(genomes, env, config):
     nets = []
     for i, genome in enumerate(genomes):
-        nets.append(neat.nn.FeedForwardNetwork.create(genome, configs[i]))
+        nets.append(neat.nn.FeedForwardNetwork.create(genome, config))
     # execution loop
     obs_n = env.reset()
     total_reward_n = [0] * env.num_agents
@@ -62,40 +58,35 @@ def eval_genomes(genomes, env, configs):
 
 
 def run():
-    # Define ecosystem structure as a list of lists, where each inner list represents an
-    # environment indicating number of pursuers and evaders for that environment
-    eco_structure = [[0, 1]]
+    num_populations = 1
 
-    # create environments and populations
-    environments = []
+    # create environment and population
+    scenario = SumoScenario(num_robots=2)
+    env = MultiAgentGazeboEnv(reward_callback=scenario.reward,
+                              observation_callback=scenario.observation,
+                              done_callback=scenario.done)
     populations = []
-    stats = []
     configs = []
-    for e in eco_structure:
-        scenario = SumoScenario(num_robots=sum(e))
-        env = MultiAgentGazeboEnv(reward_callback=scenario.reward,
-                                  observation_callback=scenario.observation,
-                                  done_callback=scenario.done)
-        environments.append(env)
-        env_pops = []
-        for _ in range(sum(e)):
-            # Load the config file, which is assumed to live in
-            # the same directory as this script.
-            local_dir = os.path.dirname(__file__)
-            config_path = os.path.join(local_dir, 'config_%d_agents' % sum(e))
-            config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
-                                 neat.DefaultSpeciesSet, neat.DefaultStagnation,
-                                 config_path)
-            configs.append(config)
-            pop = neat.Population(config)
-            s = neat.StatisticsReporter()
-            pop.add_reporter(s)
-            pop.add_reporter(neat.StdOutReporter(True))
-            env_pops.append(pop)
-            stats.append(s)
-        populations.append(env_pops)
-    num_gen = 50
-    ecosystem = Ecosystem(environments, populations)
+    stats = []
+    for _ in range(num_populations):
+        # Load the config file, which is assumed to live in the same directory as this script.
+        local_dir = os.path.dirname(__file__)
+        config_path = os.path.join(local_dir, 'config')
+        config = neat.Config(neat.DefaultGenome,
+                            neat.DefaultReproduction,
+                            neat.DefaultSpeciesSet,
+                            neat.DefaultStagnation,
+                            config_path)
+        pop = neat.Population(config)
+        s = neat.StatisticsReporter()
+        pop.add_reporter(s)
+        pop.add_reporter(neat.StdOutReporter(True))
+        populations.append(pop)
+        configs.append(config)
+        stats.append(s)
+
+    num_gen = 1
+    ecosystem = Ecosystem(env, populations)
     best_genomes = ecosystem.run(fitness_function, n=num_gen)
 
     time = datetime.now().strftime("%m%d%Y_%H%M%S")  # current date and time in string format
@@ -125,10 +116,10 @@ def run():
 
 def play_winners():
     # Watch the winners play pursuer-evader game.
-    eco_structure = [[0, 1]]
+    num_each_pop = [[0, 1]]
     # create scenarios
     environments = []
-    for e in eco_structure:
+    for e in num_each_pop:
         scenario = SumoScenario(num_robots=sum(e))
         env = MultiAgentGazeboEnv(reward_callback=scenario.reward,
                                   observation_callback=scenario.observation,
@@ -144,10 +135,11 @@ def play_winners():
                   -3: 'other_dist',
                   -4: 'other_dir'
                   }
-    path = '../catkin_ws/src/sumobots/results/11302020_230953_100'
+    #path = '../catkin_ws/src/sumobots/results/11302020_230953_100'
+    path = '../catkin_ws/src/sumobots/results/12012020_112811_50'
     configs = []
     winners = []
-    for i in range(sum(eco_structure[0])):
+    for i in range(sum(num_each_pop[0])):
         config_path = path + '/config_%d' % (i + 1)
         print(config_path)
         config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
@@ -156,6 +148,7 @@ def play_winners():
         configs.append(config)
         winner = pickle.load(open(path + '/genome_%d' % (i + 1), 'rb'))
         winners.append(winner)
+        visualize.draw_net(config, winner, True, filename=path + "/nn_%d.svg" % (i + 1), node_names=node_names)
     nets = []
     for i, genome in enumerate(winners):
         nets.append(neat.nn.FeedForwardNetwork.create(genome, configs[i]))

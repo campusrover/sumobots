@@ -6,44 +6,24 @@ sys.path.insert(2, os.path.join(sys.path[0], 'neat-python'))
 import neat.population
 
 class Ecosystem():
-    def __init__(self, environments, populations):
-        self.envs = environments
+    def __init__(self, environment, populations):
+        self.env = environment
         self.pops = populations
 
     def run(self, fitness_function, n=None):
-        """
-        Runs NEAT's genetic algorithm for at most n generations.  If n
-        is None, run until solution is found or extinction occurs.
-
-        The user-provided fitness_function must take only two arguments:
-            1. The population as a list of (genome id, genome) tuples.
-            2. The current configuration object.
-
-        The return value of the fitness function is ignored, but it must assign
-        a Python float to the `fitness` member of each genome.
-
-        The fitness function is free to maintain external state, perform
-        evaluations in parallel, etc.
-
-        It is assumed that fitness_function does not modify the list of genomes,
-        the genomes themselves (apart from updating the fitness member),
-        or the configuration object.
-        """
-        
-        flattened_pops = [p for ps in self.pops for p in ps]
         k = 0
         while n is None or k < n:
             k += 1
-            for i, pop in enumerate(flattened_pops):
+            for i, pop in enumerate(self.pops):
                 print('Population %d:' % (i + 1))
                 pop.reporters.start_generation(pop.generation)
 
             # Evaluate all genomes using the user-provided function.
-            fitness_function(self.envs, self.pops)
+            fitness_function(self.env, self.pops)
 
             # Gather and report statistics.
-            best = [None] * len(flattened_pops)
-            for i, pop in enumerate(flattened_pops):
+            best = [None] * len(self.pops)
+            for i, pop in enumerate(self.pops):
 
                 for g in pop.population.values():
                     if g.fitness is None:
@@ -64,7 +44,7 @@ class Ecosystem():
                         break
 
             # Create the next generation from the current generation.
-            for pop in flattened_pops:
+            for pop in self.pops:
                 pop.population = pop.reproduction.reproduce(pop.config, pop.species,
                                                             pop.config.pop_size, pop.generation)
 
@@ -89,7 +69,7 @@ class Ecosystem():
                 pop.generation += 1
 
         best_genomes = []
-        for pop in flattened_pops:
+        for pop in self.pops:
             if pop.config.no_fitness_termination:
                 pop.reporters.found_solution(pop.config, pop.generation, pop.best_genome)
             best_genomes.append(pop.best_genome)

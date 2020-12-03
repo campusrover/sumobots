@@ -19,7 +19,7 @@ class MultiAgentGazeboEnv():
         self.done_callback = done_callback
         self.num_agents = 0
         self.vel_pubs = []
-        for i, robot_name in enumerate(['robot1']):
+        for i, robot_name in enumerate(['robot1', 'robot2']):
             self.num_agents += 1
             self.vel_pubs.append(rospy.Publisher('/%s/cmd_vel' % robot_name, Twist, queue_size=1))
         self.linear_speed = 2.0

@@ -19,16 +19,12 @@ class SumoScenario():
             self.obs.append([0,0])
         
     def reward(self, robot_index):
-        # rew = 0
-        # for i in range(self.num_robots):
-        #     if i != robot_index and self.boundary(i):
-        #         rew += 5
-        # rew -= 0.5 * (rospy.get_time() - self.init_time)
-        rew = 0
+        rew = -0.1
+        for i in range(self.num_robots):
+            if i != robot_index and self.boundary(i):
+                rew += 10
         if self.boundary(robot_index):
             rew -= 10
-        else:
-            rew -= 0.01 * self.obs[robot_index][0]
         return rew
 
     # agent penalty for exiting the sumo arena
@@ -52,7 +48,7 @@ class SumoScenario():
             if i != robot_index:
                 while True:
                     try:
-                        trans = self.tfBuffer.lookup_transform('robot%d' % (robot_index + 1), 'robot%d' (i + 1), rospy.Time())
+                        trans = self.tfBuffer.lookup_transform('robot%d' % (robot_index + 1), 'robot%d' % (i + 1), rospy.Time())
                         break
                     except (tf2_ros.LookupException, tf2_ros.ConnectivityException,tf2_ros.ExtrapolationException):
                         self.rate.sleep()
@@ -64,7 +60,4 @@ class SumoScenario():
         return self.obs[robot_index]
 
     def done(self, robot_index):
-        for i in range(self.num_robots):
-            if self.boundary(i) or self.obs[robot_index][0] < 0.1:
-                return True
-        return False
+        return self.boundary(robot_index)
