@@ -1,0 +1,101 @@
+import os
+import pickle
+import random
+import numpy as np
+from operator import attrgetter
+from datetime import datetime
+from multiagent_env import MultiAgentGazeboEnv
+from sumo_scenario import SumoScenario
+import neat
+import visualize
+
+class SumoTrainer:
+    def __init__(self):
+        # create sumo environment
+        scenario = SumoScenario()
+        self.env = MultiAgentGazeboEnv(reward_callback=scenario.reward,
+                                       observation_callback=scenario.observation,
+                                       done_callback=scenario.done)
+        # Load the config file, which is assumed to live in the same directory as this class.
+        local_dir = os.path.dirname(__file__)
+        config_path = os.path.join(local_dir, 'config')
+        self.config = neat.Config(neat.DefaultGenome,
+                            neat.DefaultReproduction,
+                            neat.DefaultSpeciesSet,
+                            neat.DefaultStagnation,
+                            config_path)
+        self.population = neat.Population(self.config)
+        self.stats = neat.StatisticsReporter()
+        self.population.add_reporter(self.stats)
+        self.population.add_reporter(neat.StdOutReporter(True))
+        self.best_genomes = [None] * self.env.num_agents
+
+    def run(self, num_gen):
+        self.population.run(self.fitness_function, n=num_gen)
+        self.save_results(self.best_genomes, num_gen)
+
+    def fitness_function(self, genomes, config):
+        genomes = [g[1] for g in genomes]
+        best = self.population.best_genome
+        if best is None:
+            best = genomes[0]
+        for g in genomes:
+            if g is not best:
+                genome_pair = (best, g)
+                self.eval_genome_pair(genome_pair, config)
+        self.update_best_genomes(genomes)
+
+    def eval_genome_pair(self, genome_pair, config):
+        nets = []
+        for genome in genome_pair:
+            nets.append(neat.nn.FeedForwardNetwork.create(genome, config))
+        # execution loop
+        obs_n = self.env.reset()
+        total_reward_n = [0] * self.env.num_agents
+        fitnesses = []
+        steps_per_run = 60
+        for _ in range(steps_per_run):
+            # query for action from each agent's policy
+            act_n = []
+            for i, net in enumerate(nets):
+                actions = net.activate(obs_n[i])
+                actions = [1.0 if a >= 0.5 else 0 for a in actions]
+                act_n.append([actions])
+            # step environment
+            obs_n, reward_n, done_n, _ = self.env.step(act_n)
+            total_reward_n = [a + b for a, b in zip(total_reward_n, reward_n)]
+            if any(done_n):
+                break
+        for i, genome in enumerate(genome_pair):
+            genome.fitness = total_reward_n[i]
+
+    def update_best_genomes(self, genomes):
+        best = self.population.best_genome
+        second_best = max([g for g in genomes if g is not best], key=attrgetter('fitness'))
+        self.best_genomes = [best, second_best]
+
+    def save_results(self, best_genomes, num_gen):
+        # current date and time in string format
+        time = datetime.now().strftime("%m%d%Y_%H%M%S")
+
+        # Create new directory in which to save results
+        path = '../catkin_ws/src/sumobots/results/%s_%d' % (time, num_gen)
+        os.mkdir(path)
+
+        # Save results
+        node_names = {0: 'forward',
+                      1: 'backward',
+                      2: 'left',
+                      3: 'right',
+                     -1: 'center_dist',
+                     -2: 'center_dir',
+                     -3: 'other_dist',
+                     -4: 'other_dir'
+                     }
+        for i, genome in enumerate(best_genomes):
+            with open(path + '/genome_%d' % (i+1), 'wb') as f:
+                pickle.dump(genome, f)
+            visualize.draw_net(self.config, genome, True, filename=path + "/nn_%d.svg" % (i+1), node_names=node_names)
+        self.config.save(path + '/config')
+        visualize.plot_stats(self.stats, ylog=True, view=True, filename=path + "/fitness.svg")
+        visualize.plot_species(self.stats, view=True, filename=path + "/speciation.svg")

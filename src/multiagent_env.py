@@ -3,6 +3,7 @@ import numpy as np
 from std_srvs.srv import Empty
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
+from gazebo_connection import GazeboConnection
 
 class MultiAgentGazeboEnv():
 
@@ -17,16 +18,13 @@ class MultiAgentGazeboEnv():
         self.observation_callback = observation_callback
         self.info_callback = info_callback
         self.done_callback = done_callback
-        self.num_agents = 0
+        self.num_agents = 2
         self.vel_pubs = []
-        for i, robot_name in enumerate(['robot1', 'robot2']):
-            self.num_agents += 1
-            self.vel_pubs.append(rospy.Publisher('/%s/cmd_vel' % robot_name, Twist, queue_size=1))
+        for i in range(self.num_agents):
+            self.vel_pubs.append(rospy.Publisher('/robot%d/cmd_vel' % (i+1), Twist, queue_size=1))
         self.linear_speed = 2.0
         self.angular_speed = 2.0
-        self.unpause = rospy.ServiceProxy('/gazebo/unpause_physics', Empty)
-        self.pause = rospy.ServiceProxy('/gazebo/pause_physics', Empty)
-        self.reset_proxy = rospy.ServiceProxy('/gazebo/reset_simulation', Empty)
+        self.gazebo = GazeboConnection(False, 'WORLD')
 
     def step(self, action_n):
         obs_n = []
@@ -34,28 +32,10 @@ class MultiAgentGazeboEnv():
         done_n = []
         info_n = {'n': []}
 
-        rospy.wait_for_service('/gazebo/unpause_physics')
-        try:
-            self.unpause()
-        except (rospy.ServiceException) as e:
-            print ("/gazebo/unpause_physics service call failed")
-
+        self.gazebo.unpauseSim()
         for i, action in enumerate(action_n):
             self._set_action(action, i)
-
-        for i in range(self.num_agents):
-            data = None
-            while data is None:
-                try:
-                    data = rospy.wait_for_message('robot%d/odom' % (i + 1), Odometry, timeout=5)
-                except:
-                    pass   
-
-        rospy.wait_for_service('/gazebo/pause_physics')
-        try:
-            self.pause()
-        except (rospy.ServiceException) as e:
-            print ("/gazebo/pause_physics service call failed")
+        self.gazebo.pauseSim()
 
         # record observation, etc. for each agent
         for i, _ in enumerate(action_n):
@@ -68,37 +48,9 @@ class MultiAgentGazeboEnv():
 
     def reset(self):
         # Resets the state of the environment and returns an initial observation.
+        self.gazebo.resetSim()
+        self.gazebo.pauseSim()
         obs_n = []
-
-        rospy.wait_for_service('/gazebo/reset_simulation')
-        try:
-            #reset_proxy.call()
-            self.reset_proxy()
-        except (rospy.ServiceException) as e:
-            print ("/gazebo/reset_simulation service call failed")
-
-        # Unpause simulation to make observation
-        rospy.wait_for_service('/gazebo/unpause_physics')
-        try:
-            #resp_pause = pause.call()
-            self.unpause()
-        except (rospy.ServiceException) as e:
-            print ("/gazebo/unpause_physics service call failed")
-
-        for i in range(self.num_agents):
-            data = None
-            while data is None:
-                try:
-                    data = rospy.wait_for_message('robot%d/odom' % (i + 1), Odometry, timeout=5)
-                except:
-                    pass
-
-        rospy.wait_for_service('/gazebo/pause_physics')
-        try:
-            self.pause()
-        except (rospy.ServiceException) as e:
-            print ("/gazebo/pause_physics service call failed")
-        
         for i in range(self.num_agents):
             obs_n.append(self._get_obs(i))
         return obs_n

@@ -36,7 +36,7 @@ class SumoScenario():
     def observation(self, robot_index):
         while True:
             try:
-                self_tf = self.tfBuffer.lookup_transform('world', 'robot%d' % (robot_index + 1), rospy.Time())
+                self_tf = self.tfBuffer.lookup_transform('world', 'robot%d' % (robot_index + 1), rospy.Time(0))
                 break
             except (tf2_ros.LookupException, tf2_ros.ConnectivityException,tf2_ros.ExtrapolationException):
                 self.rate.sleep()
@@ -48,7 +48,7 @@ class SumoScenario():
             if i != robot_index:
                 while True:
                     try:
-                        trans = self.tfBuffer.lookup_transform('robot%d' % (robot_index + 1), 'robot%d' % (i + 1), rospy.Time())
+                        trans = self.tfBuffer.lookup_transform('robot%d' % (robot_index + 1), 'robot%d' % (i + 1), rospy.Time(0))
                         break
                     except (tf2_ros.LookupException, tf2_ros.ConnectivityException,tf2_ros.ExtrapolationException):
                         self.rate.sleep()
