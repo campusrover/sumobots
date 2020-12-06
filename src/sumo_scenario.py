@@ -21,10 +21,12 @@ class SumoScenario():
     def reward(self, robot_index):
         rew = -0.1
         for i in range(self.num_robots):
-            if i != robot_index and self.boundary(i):
-                rew += 10
+            if i != robot_index:
+                # rew += self.observation(robot_index)[2 * i]
+                if self.boundary(i):
+                    rew += 30
         if self.boundary(robot_index):
-            rew -= 10
+            rew -= 30
         return rew
 
     # agent penalty for exiting the sumo arena

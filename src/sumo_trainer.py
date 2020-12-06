@@ -51,7 +51,7 @@ class SumoTrainer:
         obs_n = self.env.reset()
         total_reward_n = [0] * self.env.num_agents
         fitnesses = []
-        steps_per_run = 60
+        steps_per_run = 200
         for _ in range(steps_per_run):
             # query for action from each agent's policy
             act_n = []
