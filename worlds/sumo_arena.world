@@ -242,7 +242,6 @@
           </surface>
         </collision>
       </link>
-      <!--
       <link name='link_1'>
         <inertial>
           <mass>1000</mass>
@@ -343,7 +342,6 @@
           </surface>
         </collision>
       </link>
-      -->
       <static>0</static>
       <allow_auto_disable>1</allow_auto_disable>
       <pose frame=''>0.041707 -0.057044 0.149997 2e-06 -2e-06 -0</pose>
