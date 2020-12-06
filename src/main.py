@@ -1,7 +1,13 @@
 #!/usr/bin/env python
 import rospy
+import pickle
 from sumo_trainer import SumoTrainer
+import neat
 
+
+def train(num_generations):
+    trainer = SumoTrainer()
+    trainer.run(num_generations)
 
 def play_winners(results_path):
     winners = []
@@ -15,15 +21,13 @@ def play_winners(results_path):
 
     trainer = SumoTrainer()
     while not rospy.is_shutdown():
-        trainer.eval_genome_set(tuple(winners))
+        trainer.eval_genome_pair(tuple(winners), config)
 
 
 if __name__ == '__main__':
     rospy.init_node('sumo')
-    trainer = SumoTrainer()
-    num_generations = 500
-    trainer.run(num_generations)
-    #play_winners('../catkin_ws/src/sumobots/results/12012020_112811_50')
+    train(1000)
+    #play_winners('../catkin_ws/src/sumobots/results/12042020_140426_500')
     #test_action()
 
 

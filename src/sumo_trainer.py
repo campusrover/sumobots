@@ -4,6 +4,7 @@ import random
 import numpy as np
 from operator import attrgetter
 from datetime import datetime
+from itertools import izip_longest
 from multiagent_env import MultiAgentGazeboEnv
 from sumo_scenario import SumoScenario
 import neat
@@ -35,15 +36,12 @@ class SumoTrainer:
         self.save_results(self.best_genomes, num_gen)
 
     def fitness_function(self, genomes, config):
+        genome_pairs = self.pair_genomes_by_species(genomes)
+        for gp in genome_pairs:
+            self.eval_genome_pair(gp, config)
         genomes = [g[1] for g in genomes]
-        best = self.population.best_genome
-        if best is None:
-            best = genomes[0]
-        for g in genomes:
-            if g is not best:
-                genome_pair = (best, g)
-                self.eval_genome_pair(genome_pair, config)
-        self.update_best_genomes(genomes)
+        if not all([g.fitness is None for g in genomes]):
+            self.update_best_genomes(genomes)
 
     def eval_genome_pair(self, genome_pair, config):
         nets = []
@@ -60,7 +58,7 @@ class SumoTrainer:
             for i, net in enumerate(nets):
                 actions = net.activate(obs_n[i])
                 actions = [1.0 if a >= 0.5 else 0 for a in actions]
-                act_n.append([actions])
+                act_n.append(actions)
             # step environment
             obs_n, reward_n, done_n, _ = self.env.step(act_n)
             total_reward_n = [a + b for a, b in zip(total_reward_n, reward_n)]
@@ -69,9 +67,36 @@ class SumoTrainer:
         for i, genome in enumerate(genome_pair):
             genome.fitness = total_reward_n[i]
 
+    def pair_genomes_by_species(self, genomes):
+        genome_ids = [g[0] for g in genomes]
+        genomes = [g[1] for g in genomes]
+        species_ids = [self.population.species.get_species_id(i) for i in genome_ids]
+        genome_species_map = zip(genomes, species_ids)
+        genome_species_map.sort(key=lambda x: x[1])
+        genome_by_species = [[genome_species_map[0][0]]]
+        curr_s_id = genome_species_map[0][1]
+        curr_index = 0
+        for i in range(1, len(genomes)):
+            s_id = genome_species_map[i][1]
+            g = genome_species_map[i][0]
+            if s_id == curr_s_id:
+                genome_by_species[curr_index].append(g)
+            else:
+                genome_by_species.append([g])
+                curr_s_id = s_id
+                curr_index += 1
+        genome_pairs = []
+        for s in genome_by_species:
+            # pair up genomes within each species
+            genome_pairs.extend(izip_longest(s[0:(len(s) // 2)], s[(len(s) // 2):], fillvalue=s[0]))
+        return genome_pairs
+
     def update_best_genomes(self, genomes):
         best = self.population.best_genome
-        second_best = max([g for g in genomes if g is not best], key=attrgetter('fitness'))
+        genomes.extend(self.best_genomes)
+        second_best = max([g for g in genomes if g is not None
+                           and g.fitness is not None and g is not best],
+                           key=attrgetter('fitness'))
         self.best_genomes = [best, second_best]
 
     def save_results(self, best_genomes, num_gen):

@@ -83,6 +83,6 @@ class MultiAgentGazeboEnv():
     # set env action for a particular agent
     def _set_action(self, action, agent):
         t = Twist()
-        t.linear.x = (action[0][0] - action[0][1]) * self.linear_speed
-        t.angular.z = (action[0][2] - action[0][3]) * self.angular_speed
+        t.linear.x = (action[0] - action[1]) * self.linear_speed
+        t.angular.z = (action[2] - action[3]) * self.angular_speed
         self.vel_pubs[agent].publish(t)

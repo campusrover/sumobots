@@ -29,7 +29,14 @@ class SumoScenario():
 
     # agent penalty for exiting the sumo arena
     def boundary(self, robot_index):
-        if self.obs[robot_index][0] > 1.5:
+        while True:
+            try:
+                self_tf = self.tfBuffer.lookup_transform('world', 'robot%d' % (robot_index + 1), rospy.Time(0))
+                break
+            except (tf2_ros.LookupException, tf2_ros.ConnectivityException,tf2_ros.ExtrapolationException):
+                self.rate.sleep()
+        z = self_tf.transform.translation.z
+        if z < 0.29:
             return True
         return False
 
