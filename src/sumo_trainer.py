@@ -1,12 +1,15 @@
 import os
+import multiprocessing
 import pickle
 import random
 import numpy as np
 from operator import attrgetter
 from datetime import datetime
-from itertools import izip_longest
+from itertools import izip_longest, combinations
+from collections import defaultdict
 from multiagent_env import MultiAgentGazeboEnv
 from sumo_scenario import SumoScenario
+from parallel import ParallelEvaluator
 import neat
 import visualize
 
@@ -33,20 +36,20 @@ class SumoTrainer:
         self.best_genomes = [None] * self.env.num_agents
 
     def run(self, num_gen):
+        # pe = ParallelEvaluator(multiprocessing.cpu_count(),
+        #                        self.eval_genome_pair,
+        #                        self.pair_genomes_all_vs_all)
         self.population.run(self.fitness_function, n=num_gen)
         self.save_results(self.best_genomes, num_gen)
 
     def fitness_function(self, genomes, config):
+        genome_pairs = self.pair_genomes_all_vs_all(genomes)
+        self.assign_fitnesses(genome_pairs, config)
         genomes = [g[1] for g in genomes]
-        num_opponents = 2
-        for opp in range(num_opponents):
-            genome_pairs = self.pair_genomes_one_vs_one(genomes)
-            for gp in genome_pairs:
-                self.eval_genome_pair(gp, opp, config)
         if not all([g.fitness is None for g in genomes]):
             self.update_best_genomes(genomes)
 
-    def eval_genome_pair(self, genome_pair, opp, config):
+    def eval_genome_pair(self, genome_pair, config):
         nets = []
         for genome in genome_pair:
             nets.append(neat.nn.FeedForwardNetwork.create(genome, config))
@@ -66,20 +69,31 @@ class SumoTrainer:
             total_reward_n = [a + b for a, b in zip(total_reward_n, reward_n)]
             if any(done_n):
                 break
-        if opp == 0:
-            for i, genome in enumerate(genome_pair):
-                genome.fitness = total_reward_n[i]
-        else:
-            for i, genome in enumerate(genome_pair):
-                genome.fitness = (genome.fitness * opp + total_reward_n[i]) / (opp + 1)
+        return total_reward_n
+
+    def assign_fitnesses(self, genome_pairs, config):
+        genome_dict = defaultdict(int)
+        for genome_pair in genome_pairs:
+            match_fitnesses = self.eval_genome_pair(genome_pair, config)
+            num_matches = [genome_dict[g] for g in genome_pair]
+            for i, n in enumerate(num_matches):
+                g = genome_pair[i]
+                if n == 0:
+                    g.fitness = match_fitnesses[i]
+                else:
+                    g.fitness = (g.fitness * n + match_fitnesses[i]) / (n + 1)
+                genome_dict[g] += 1
+
+    def pair_genomes_all_vs_all(self, genomes):
+        genomes = [g[1] for g in genomes]
+        return list(combinations(genomes, 2))
 
     def pair_genomes_one_vs_one(self, genomes):
+        genomes = [g[1] for g in genomes]
         random.shuffle(genomes)
         return izip_longest(genomes[0:(len(genomes) // 2)],
                             genomes[(len(genomes) // 2):],
                             fillvalue=genomes[0])
-
-
 
     def pair_genomes_by_species(self, genomes):
         genome_ids = [g[0] for g in genomes]
