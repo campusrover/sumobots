@@ -22,7 +22,6 @@ class SumoScenario():
         rew = -0.1
         for i in range(self.num_robots):
             if i != robot_index:
-                # rew += self.observation(robot_index)[2 * i]
                 if self.boundary(i):
                     rew += 30
         if self.boundary(robot_index):

@@ -14,7 +14,8 @@ class SumoTrainer:
     def __init__(self):
         # create sumo environment
         scenario = SumoScenario()
-        self.env = MultiAgentGazeboEnv(reward_callback=scenario.reward,
+        self.env = MultiAgentGazeboEnv(scenario.num_robots,
+                                       reward_callback=scenario.reward,
                                        observation_callback=scenario.observation,
                                        done_callback=scenario.done)
         # Load the config file, which is assumed to live in the same directory as this class.
@@ -36,21 +37,22 @@ class SumoTrainer:
         self.save_results(self.best_genomes, num_gen)
 
     def fitness_function(self, genomes, config):
-        genome_pairs = self.pair_genomes_by_species(genomes)
-        for gp in genome_pairs:
-            self.eval_genome_pair(gp, config)
         genomes = [g[1] for g in genomes]
+        num_opponents = 2
+        for opp in range(num_opponents):
+            genome_pairs = self.pair_genomes_one_vs_one(genomes)
+            for gp in genome_pairs:
+                self.eval_genome_pair(gp, opp, config)
         if not all([g.fitness is None for g in genomes]):
             self.update_best_genomes(genomes)
 
-    def eval_genome_pair(self, genome_pair, config):
+    def eval_genome_pair(self, genome_pair, opp, config):
         nets = []
         for genome in genome_pair:
             nets.append(neat.nn.FeedForwardNetwork.create(genome, config))
         # execution loop
         obs_n = self.env.reset()
         total_reward_n = [0] * self.env.num_agents
-        fitnesses = []
         steps_per_run = 200
         for _ in range(steps_per_run):
             # query for action from each agent's policy
@@ -64,8 +66,20 @@ class SumoTrainer:
             total_reward_n = [a + b for a, b in zip(total_reward_n, reward_n)]
             if any(done_n):
                 break
-        for i, genome in enumerate(genome_pair):
-            genome.fitness = total_reward_n[i]
+        if opp == 0:
+            for i, genome in enumerate(genome_pair):
+                genome.fitness = total_reward_n[i]
+        else:
+            for i, genome in enumerate(genome_pair):
+                genome.fitness = (genome.fitness * opp + total_reward_n[i]) / (opp + 1)
+
+    def pair_genomes_one_vs_one(self, genomes):
+        random.shuffle(genomes)
+        return izip_longest(genomes[0:(len(genomes) // 2)],
+                            genomes[(len(genomes) // 2):],
+                            fillvalue=genomes[0])
+
+
 
     def pair_genomes_by_species(self, genomes):
         genome_ids = [g[0] for g in genomes]

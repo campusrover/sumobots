@@ -7,18 +7,20 @@ from gazebo_connection import GazeboConnection
 
 class MultiAgentGazeboEnv():
 
-    def __init__(self, reset_callback=None,
-                       reward_callback=None,
-                       observation_callback=None,
-                       info_callback=None,
-                       done_callback=None):
+    def __init__(self,
+                 num_agents,
+                 reset_callback=None,
+                 reward_callback=None,
+                 observation_callback=None,
+                 info_callback=None,
+                 done_callback=None):
         # scenario callbacks
         self.reset_callback = reset_callback
         self.reward_callback = reward_callback
         self.observation_callback = observation_callback
         self.info_callback = info_callback
         self.done_callback = done_callback
-        self.num_agents = 2
+        self.num_agents = num_agents
         self.vel_pubs = []
         for i in range(self.num_agents):
             self.vel_pubs.append(rospy.Publisher('/robot%d/cmd_vel' % (i+1), Twist, queue_size=1))
