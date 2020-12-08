@@ -9,10 +9,19 @@ from itertools import izip_longest, combinations
 from collections import defaultdict
 from multiagent_env import MultiAgentGazeboEnv
 from sumo_scenario import SumoScenario
-from parallel import ParallelEvaluator
 import neat
 import visualize
 
+'''
+---------------------------------------------------------------------------------------------------
+Performs coevolutionary training of neural networks on the sumobots game, using the NEAT package to
+evolve neural network topologies. Creates a population of genomes according to specifications in
+the NEAT config file, runs the population for n generations, evaluating genomes using the trainer's
+evaluation function, and saves the results.
+
+Author: Joseph Pickens, August Soderberg
+---------------------------------------------------------------------------------------------------
+'''
 class SumoTrainer:
     def __init__(self):
         # create sumo environment
@@ -21,7 +30,7 @@ class SumoTrainer:
                                        reward_callback=scenario.reward,
                                        observation_callback=scenario.observation,
                                        done_callback=scenario.done)
-        # Load the config file, which is assumed to live in the same directory as this class.
+        # load the config file, which is assumed to live in the same directory as this class.
         local_dir = os.path.dirname(__file__)
         config_path = os.path.join(local_dir, 'config')
         self.config = neat.Config(neat.DefaultGenome,
@@ -29,22 +38,32 @@ class SumoTrainer:
                             neat.DefaultSpeciesSet,
                             neat.DefaultStagnation,
                             config_path)
+        # create population of genomes and corresponding statistics reporters
         self.population = neat.Population(self.config)
         self.stats = neat.StatisticsReporter()
         self.population.add_reporter(self.stats)
         self.population.add_reporter(neat.StdOutReporter(True))
+        # track the best two genomes
         self.best_genomes = [None] * self.env.num_agents
 
     def run(self, num_gen):
-        # pe = ParallelEvaluator(multiprocessing.cpu_count(),
-        #                        self.eval_genome_pair,
-        #                        self.pair_genomes_all_vs_all)
         self.population.run(self.fitness_function, n=num_gen)
         self.save_results(self.best_genomes, num_gen)
 
     def fitness_function(self, genomes, config):
-        genome_pairs = self.pair_genomes_all_vs_all(genomes)
-        self.assign_fitnesses(genome_pairs, config)
+        genome_pairs = self.pair_species_one_vs_one(genomes)
+        genome_dict = defaultdict(int)
+        for genome_pair in genome_pairs:
+            latest_fitnesses = self.eval_genome_pair(genome_pair, config)
+            num_matches = [genome_dict[g] for g in genome_pair]
+            for i, n in enumerate(num_matches):
+                g = genome_pair[i]
+                if n == 0:
+                    g.fitness = latest_fitnesses[i]
+                else:
+                    # average fitnesses from all sumo matches during this generation
+                    g.fitness = (g.fitness * n + latest_fitnesses[i]) / (n + 1)
+                genome_dict[g] += 1
         genomes = [g[1] for g in genomes]
         if not all([g.fitness is None for g in genomes]):
             self.update_best_genomes(genomes)
@@ -52,7 +71,7 @@ class SumoTrainer:
     def eval_genome_pair(self, genome_pair, config):
         nets = []
         for genome in genome_pair:
-            nets.append(neat.nn.FeedForwardNetwork.create(genome, config))
+            nets.append(neat.nn.RecurrentNetwork.create(genome, config))
         # execution loop
         obs_n = self.env.reset()
         total_reward_n = [0] * self.env.num_agents
@@ -71,53 +90,39 @@ class SumoTrainer:
                 break
         return total_reward_n
 
-    def assign_fitnesses(self, genome_pairs, config):
-        genome_dict = defaultdict(int)
-        for genome_pair in genome_pairs:
-            match_fitnesses = self.eval_genome_pair(genome_pair, config)
-            num_matches = [genome_dict[g] for g in genome_pair]
-            for i, n in enumerate(num_matches):
-                g = genome_pair[i]
-                if n == 0:
-                    g.fitness = match_fitnesses[i]
-                else:
-                    g.fitness = (g.fitness * n + match_fitnesses[i]) / (n + 1)
-                genome_dict[g] += 1
-
-    def pair_genomes_all_vs_all(self, genomes):
+    def pair_all_vs_all(self, genomes):
         genomes = [g[1] for g in genomes]
-        return list(combinations(genomes, 2))
+        return list(combinations(genomes, self.env.num_agents))
 
-    def pair_genomes_one_vs_one(self, genomes):
+    def pair_one_vs_one(self, genomes):
         genomes = [g[1] for g in genomes]
         random.shuffle(genomes)
-        return izip_longest(genomes[0:(len(genomes) // 2)],
-                            genomes[(len(genomes) // 2):],
+        return izip_longest(genomes[0:(len(genomes) // 2)], genomes[(len(genomes) // 2):],
                             fillvalue=genomes[0])
 
-    def pair_genomes_by_species(self, genomes):
+    def pair_species_all_vs_all(self, genomes):
+        genomes_grouped = self.group_genomes_by_species(genomes)
+        genome_pairs = []
+        for gs in genomes_grouped:
+            genome_pairs.extend(self.pair_all_vs_all(gs))
+        return genome_pairs
+
+    def pair_species_one_vs_one(self, genomes):
+        genomes_grouped = self.group_genomes_by_species(genomes)
+        genome_pairs = []
+        for gs in genomes_grouped:
+            random.shuffle(gs)
+            genome_pairs.extend(izip_longest(gs[0:(len(gs) // 2)], gs[(len(gs) // 2):],
+                                fillvalue=gs[0]))
+        return genome_pairs
+
+    def group_genomes_by_species(self, genomes):
         genome_ids = [g[0] for g in genomes]
-        genomes = [g[1] for g in genomes]
         species_ids = [self.population.species.get_species_id(i) for i in genome_ids]
         genome_species_map = zip(genomes, species_ids)
-        genome_species_map.sort(key=lambda x: x[1])
-        genome_by_species = [[genome_species_map[0][0]]]
-        curr_s_id = genome_species_map[0][1]
-        curr_index = 0
-        for i in range(1, len(genomes)):
-            s_id = genome_species_map[i][1]
-            g = genome_species_map[i][0]
-            if s_id == curr_s_id:
-                genome_by_species[curr_index].append(g)
-            else:
-                genome_by_species.append([g])
-                curr_s_id = s_id
-                curr_index += 1
-        genome_pairs = []
-        for s in genome_by_species:
-            # pair up genomes within each species
-            genome_pairs.extend(izip_longest(s[0:(len(s) // 2)], s[(len(s) // 2):], fillvalue=s[0]))
-        return genome_pairs
+        species_unique_ids = set(species_ids)
+        genomes_grouped = [[y[0] for y in genome_species_map if y[1]==x] for x in species_unique_ids]
+        return genomes_grouped
 
     def update_best_genomes(self, genomes):
         best = self.population.best_genome

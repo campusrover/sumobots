@@ -1,12 +1,16 @@
 from __future__ import print_function
-
 import copy
 import warnings
-
 import graphviz
 import matplotlib.pyplot as plt
 import numpy as np
 
+'''
+---------------------------------------------------------------------------------------------------
+Imported from OpenAI's Multiagent Particle Environment package. Used to plot fitness and speciation
+statistics and to visualize neural network graphs.
+---------------------------------------------------------------------------------------------------
+'''
 
 def plot_stats(statistics, ylog=False, view=False, filename='avg_fitness.svg'):
     """ Plots the population's average and best fitness. """

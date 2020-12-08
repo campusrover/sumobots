@@ -8,8 +8,8 @@ from std_msgs.msg import Float64
 from geometry_msgs.msg import Vector3
 
 '''
-The GazeboConnection class is from the ROS OpenAI package (linked below). It handles pausing,
-unpausing, and resetting of the Gazebo simulation during a machine learning training task.
+Imported from the ROS OpenAI package (linked below). The GazeboConnection class handles pausing,
+unpausing, and resetting of the Gazebo simulation during a training task.
 
 ------------------- https://bitbucket.org/theconstructcore/openai_ros.git --------------------
 '''

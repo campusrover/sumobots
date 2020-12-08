@@ -4,11 +4,21 @@ import pickle
 from sumo_trainer import SumoTrainer
 import neat
 
+'''
+---------------------------------------------------------------------------------------------------
+Main script for running the sumobots game, including coevolutionary training for the specified
+number of generations.
 
+Author: Joseph Pickens, August Soderberg
+---------------------------------------------------------------------------------------------------
+'''
+
+# train for the given number of generations
 def train(num_generations):
     trainer = SumoTrainer()
     trainer.run(num_generations)
 
+# play the winning genomes from the given saved results filepath
 def play_winners(results_path):
     winners = []
     config_path = results_path + '/config'
@@ -26,8 +36,7 @@ def play_winners(results_path):
 
 if __name__ == '__main__':
     rospy.init_node('sumo')
-    train(1000)
+    train(300)
     #play_winners('../catkin_ws/src/sumobots/results/12062020_191730_100')
-    #test_action()
 
 
