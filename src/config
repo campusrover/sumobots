@@ -5,8 +5,9 @@
 [NEAT]
 fitness_criterion     = max
 fitness_threshold     = 100
-pop_size              = 100
+pop_size              = 200
 reset_on_extinction   = 1
+no_fitness_termination = True
 
 [DefaultGenome]
 num_inputs              = 4

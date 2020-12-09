@@ -21,18 +21,19 @@ class SumoScenario():
         self.num_robots = num_robots
         self.tfBuffer = tf2_ros.Buffer()
         self.listener = tf2_ros.TransformListener(self.tfBuffer)
-        self.obs = []
-        for i in range(self.num_robots):
-            self.obs.append([0,0])
         
     def reward(self, robot_index):
-        rew = -0.1
+        rew = 0
+        count_of_other_bot = self.num_robots - 1
+        curr_obs = self.observation(robot_index)
         for i in range(self.num_robots):
             if i != robot_index:
+                rew -= 0.1*curr_obs[2*count_of_other_bot]
+                count_of_other_bot -= 1
                 if self.boundary(i):
-                    rew += 30
+                    rew += 100
         if self.boundary(robot_index):
-            rew -= 30
+            rew -= 100
         return rew
 
     # return true if robot has fallen off the sumo arena platform
@@ -75,8 +76,7 @@ class SumoScenario():
                 dist = math.sqrt(trans.transform.translation.x ** 2 + trans.transform.translation.y ** 2)
                 angle = math.atan2(trans.transform.translation.y, trans.transform.translation.x)
                 other.extend([dist, angle])
-        self.obs[robot_index] = np.concatenate((center, other))
-        return self.obs[robot_index]
+        return center + other
 
     # done if robot has fallen off the arena platform
     def done(self, robot_index):
