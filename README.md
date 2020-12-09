@@ -19,15 +19,15 @@ This project applies concepts from within the field of coevolution to evolve com
 
 
 ## Introduction <a name="introduction"></a>
-#### Problem Statement
+### Problem Statement
 The original objective of this project was to design an autonomous robot in the style of a sumo combat robot. These are small, agile, autonomous robots designed to force their adversary (in our case, a physically identical copy of the robot) out of the circular sumo arena. This project encompassed the creation of the custom simulated robot models, the ROS Gazebo world with the sumo arena, and the primary task of programming robot behavior. The goal for coding behavior was to find a way to map observations from sensor data onto linear and angular velocity values in a sufficiently intelligent manner so as to produce interesting, sophisticated, and entertaining behavior in the sumo wrestling match. We chose at the outset of the project to make use of coevolutionary methods to accomplish this goal. Specifically, we proposed each robot be controlled by a neural network. During training, robots are drawn from a population, paired up within the sumo arena, and assigned a fitness payoff in accordance with the outcome of the fight. Robots then have a likelihood of "reproducing" based on their assigned fitness payoff.
 
-#### Relevant Literature
+### Relevant Literature
 We make use of the [NEAT algorithm](http://nn.cs.utexas.edu/downloads/papers/stanley.cec02.pdf) (Stanley and Miikkulainen, 2002) to evolve the neural network topology. Other papers that informed our process includes [(Ficici and Pollack, 1998)](https://pdfs.semanticscholar.org/9979/ababa4100cf35afc1c8be8777326134d14fd.pdf), specifically their work on the problem of "Mediocre Stable States" within competitive coevolution.
 
 ## References
 1. K. O. Stanley and R. Miikkulainen, "Efficient evolution of neural network topologies," Proceedings of the 2002 Congress on Evolutionary Computation. CEC'02 (Cat. No.02TH8600), Honolulu, HI, USA, 2002, pp. 1757-1762 vol.2, doi: 10.1109/CEC.2002.1004508.
-2. Ficici, Sevan & Pollack, Jordan. (1998). Challenges in Coevolutionary Learning: Arms-Race Dynamics, Open-Endedness, and Mediocre Stable States. 
+2. S. Ficici and J. B. Pollack, "Challenges in Coevolutionary Learning: Arms-Race Dynamics, Open-Endedness, and Mediocre Stable States," Proceedings of the Sixth International Conference on Artificial Life. MIT Press.
 
 @INPROCEEDINGS{1004508,  author={K. O. {Stanley} and R. {Miikkulainen}},  booktitle={Proceedings of the 2002 Congress on Evolutionary Computation. CEC'02 (Cat. No.02TH8600)},   title={Efficient evolution of neural network topologies},   year={2002},  volume={2},  number={},  pages={1757-1762 vol.2},  doi={10.1109/CEC.2002.1004508}}
 
