@@ -24,14 +24,12 @@ class SumoScenario():
         
     def reward(self, robot_index):
         rew = 0
-        count_of_other_bot = self.num_robots - 1
-        curr_obs = self.observation(robot_index)
-        for i in range(self.num_robots):
-            if i != robot_index:
-                rew -= 0.1*curr_obs[2*count_of_other_bot]
-                count_of_other_bot -= 1
-                if self.boundary(i):
-                    rew += 100
+        other_robot_indices = [j for j in range(self.num_robots) if j != robot_index]
+        obs = self.observation(robot_index)
+        for i, j in enumerate(other_robot_indices):
+            rew -= 0.1 * obs[2 * (i + 1)]
+            if self.boundary(j) and obs[2 * (i + 1)] < 1.0:
+                rew += 100
         if self.boundary(robot_index):
             rew -= 100
         return rew
