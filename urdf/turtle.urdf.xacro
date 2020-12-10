@@ -49,13 +49,13 @@
   </joint>
 
   <link name="wheel_left_link">
-    <!-- <visual>
+    <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
         <cylinder length="0.018" radius="0.033"/>
       </geometry>
       <material name="dark"/>
-    </visual> -->
+    </visual>
 
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -81,13 +81,13 @@
   </joint>
 
   <link name="wheel_right_link">
-    <!-- <visual>
+    <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
         <cylinder length="0.018" radius="0.033"/>
       </geometry>
       <material name="dark"/>
-    </visual> -->
+    </visual>
 
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
