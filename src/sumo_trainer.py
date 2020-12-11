@@ -65,6 +65,7 @@ class SumoTrainer:
                     g.fitness = (g.fitness * n + latest_fitnesses[i]) / (n + 1)
                 genome_dict[g] += 1
         genomes = [g[1] for g in genomes]
+        print([g.fitness for g in genomes])
         if not all([g.fitness is None for g in genomes]):
             self.update_best_genomes(genomes)
 
@@ -105,12 +106,11 @@ class SumoTrainer:
         genome_pairs = []
         i = 0
         j = n
-        while j <= len(genomes):
+        while j <= len(genomes) and len(genomes) - j != 1:
             genome_pairs.extend(self.pair_all_vs_all(genomes[i:j]))
             i += n
             j += n
-        if i < len(genomes):
-            genome_pairs.extend(self.pair_all_vs_all(genomes[i:]))
+        genome_pairs.extend(self.pair_all_vs_all(genomes[i:]))
         return genome_pairs
 
 
