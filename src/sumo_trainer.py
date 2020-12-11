@@ -51,7 +51,7 @@ class SumoTrainer:
         self.save_results(self.best_genomes, num_gen)
 
     def fitness_function(self, genomes, config):
-        genome_pairs = self.pair_species_one_vs_one(genomes)
+        genome_pairs = self.pair_species_all_vs_all(genomes)
         genome_dict = defaultdict(int)
         for genome_pair in genome_pairs:
             latest_fitnesses = self.eval_genome_pair(genome_pair, config)

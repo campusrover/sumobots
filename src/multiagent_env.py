@@ -1,9 +1,13 @@
 import rospy
 import numpy as np
+import random
 from std_srvs.srv import Empty
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from gazebo_connection import GazeboConnection
+from gazebo_msgs.msg import ModelState 
+from gazebo_msgs.srv import SetModelState
+from tf.transformations import quaternion_from_euler
 
 '''
 ---------------------------------------------------------------------------------------------------
@@ -60,7 +64,24 @@ class MultiAgentGazeboEnv():
 
     def reset(self):
         # Resets the state of the environment and returns an initial observation.
-        self.gazebo.resetSim()
+        state_msg = ModelState()
+        set_state = rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
+        for i in range(self.num_agents):
+            state_msg.model_name = 'Robot%d' % (i + 1)
+            state_msg.pose.position.x = random.uniform(-1.2, 1.2)
+            state_msg.pose.position.y = random.uniform(-1.2, 1.2)
+            state_msg.pose.position.z = 0.35
+            quaternion = quaternion_from_euler(0, 0, random.uniform(0, 6.28))
+            state_msg.pose.orientation.x = quaternion[0]
+            state_msg.pose.orientation.y = quaternion[1]
+            state_msg.pose.orientation.z = quaternion[2]
+            state_msg.pose.orientation.w = quaternion[3]
+            rospy.wait_for_service('/gazebo/set_model_state')
+            try:
+                set_state(state_msg)
+            except rospy.ServiceException, e:
+                print('Service call failed: %s' % e)
+        self.gazebo.unpauseSim()
         self.gazebo.pauseSim()
         obs_n = []
         for i in range(self.num_agents):
