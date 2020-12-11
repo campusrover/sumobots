@@ -119,7 +119,7 @@ class SumoTrainer:
         species_ids = [self.population.species.get_species_id(i) for i in genome_ids]
         genome_species_map = zip(genomes, species_ids)
         species_unique_ids = set(species_ids)
-        genomes_grouped = [[y for y in genome_species_map if y[1]==x] for x in species_unique_ids]
+        genomes_grouped = [[y[0] for y in genome_species_map if y[1]==x] for x in species_unique_ids]
         return genomes_grouped
 
     def update_best_genomes(self, genomes):
