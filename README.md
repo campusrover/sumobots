@@ -36,8 +36,8 @@ Now you can launch again using the command ```$ roslaunch sumobots arena.launch`
 
 ## Table of Contents
 1. [Introduction](#introduction)
-  a. [Problem Statement](#problemstatement)
-  b. [Relevant Literature](#literature)
+a) [Problem Statement](#problemstatement)
+b) [Relevant Literature](#literature)
 2. [What Was Created](#whatwascreated)
   a. [Technical Descriptions and Illustrations](#technical)
   b. [Algorithms, Modules, and Techniques](#algorithms)
