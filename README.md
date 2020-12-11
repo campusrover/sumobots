@@ -23,7 +23,7 @@ Next, go to ```src/main.py``` and at the bottom make sure to comment out the ```
 
 Next, go to the ```src/sumo_trainer.py``` file and notice the first line of the ```fitness_function(self, genomes, config):``` method calls a method of pairing starting with the word ```pair```, this describes how robots will be matched up to fight each generation; feel free to pick another one of the ```pair_...``` methods from the ```sumo_trainer.py``` file and insert it there if you would like.
 
-Once all of that is set up, go ahead navigate in your Unix shell to the ```sumobots``` directory.
+Once all of that is set up, go ahead and navigate in your Unix shell to the ```sumobots``` directory.
 
 Use the command ```$ roslaunch sumobots arena.launch``` to begin the simulation.
 
