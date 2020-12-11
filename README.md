@@ -66,22 +66,21 @@ We adapted and simplified the MultiAgentEnv class from OpenAI's [multiagent part
 #### Our Training Scheme
 ##### Genome Pairing Techniques
 One of the variables we experimented with in our training scheme was the manner in which we went about pairing genomes during evaluation in the sumo ring. The following methods were tried:
-1. Randomized one-vs-one:
-- The population of genomes is shuffled, split in half, and the two sub-populations paired off accordingly.
-2. All-vs-all:
-- All possible unique combinations of genome pairs are assessed, and the payoffs across all fights averaged for determining fitness.
-3. All-vs-some:
-- Each genome plays against n other unique genomes.
-4. Intra-species pairing:
-- Each of the above three methods can be used for creating pairs within a single species of the population. This method pairs genomes from the same species, and thus genomes that are relatively similar to one another. We reasoned this would likely help avoid unfair match-ups between genomes of widely-varying adaptive capacity.
+1. Randomized one-vs-one: The population of genomes is shuffled, split in half, and the two sub-populations paired off accordingly.
+2. All-vs-all: All possible unique combinations of genome pairs are assessed, and the payoffs across all fights averaged for determining fitness.
+3. All-vs-some: each genome plays against n other unique genomes.
+4. Intra-species pairing: This method pairs genomes from the same species using one of the above three methods, and thus only pairs genomes that are relatively similar to one another.
 
-Our final training scheme 
-Payoffs for the sumo wrestling task are assessed at each time step of the fight. Our original payoff scheme was as follows:
+##### Assigning Payoffs
+The design of payoffs is of utmost importance to successful evolutionary training. Our original payoff scheme was as follows:
 1. Each robot is assigned a small negative payoff at each time step, so as to incentivize acting quickly in the fight.
 2. If a robot falls off the arena platform, they receive a large negative payoff, and the fight ends.
-3. If a robot's opponent falls off the arena platform, the receive a large positive payoff, and the fight ends.
+3. If a robot's opponent falls off the arena platform, they receive a large positive payoff, and the fight ends.
 
-After this payoff scheme yielded
+After this payoff scheme yielded unimpressive results, we modified it as follows:
+1. Each robot is assigned a small negative payoff at each time step proportional to their distance in space from their opponent, so as to incentivize movement toward one's opponent.
+2. Same as before.
+3. If a robot's opponent falls of the arena platform, they receive a large positive payoff as before, but only if within 1 meter of their opponent at the final time step, so as to withhold reward from robots that simply happened to be paired with a self-destructive opponent.
 
 ### Problems Encountered
 One of the problems we encountered during coevolutionary training was stagnation caused by the existence of Mediocre Stable States (MSS), a phenomenon that is well-documented within the coevolutionary literature [(Ficici and Pollack, 1998)](https://pdfs.semanticscholar.org/9979/ababa4100cf35afc1c8be8777326134d14fd.pdf). Specifically, our sumobots consistently got stuck with a strategy of simply remaining stationary throughout the entire fight. This was evidently due to the fact that any movement at all turned out to be too high a risk, that is, would too often result in the robot falling off the sumo arena platform. The solution we came up with was to modify our payoff assignments in two ways. Firstly, we explicitly incentivized movement toward one's opponent by assigning a negative payoff to each robot proportional with the distance between the robots. And secondly, we withheld any positive payoff from the winning robot if the winner was more than 1 meter away from the opponent at the moment when the opponent fell off the platform. These two changes worked together to incentivize active movement of the robots toward each other, and thereby make for a more interesting and exciting fight.
