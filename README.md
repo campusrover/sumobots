@@ -15,9 +15,9 @@ This project is an attempt to apply concepts from the field of coevolution to ev
 
 ## How To Run
 ### Training the Sumobots
-There are a few things that need to be changed when beginning a new training session.
+There are a few settings to consider when beginning a new training session.
 
-First you will need to select the size of your population you want to train; go to ```src/config``` and change the ```pop_size``` parameter to be the size of population you want.
+First you will need to select the size of your population you want to train; go to ```src/config``` and change the ```pop_size``` parameter to be the size of the population you want.
 
 Next, go to ```src/main.py``` and at the bottom make sure to comment out the ```play_winners(...)``` line and uncomment the ```train(...)``` line. As an argument for the ```train(...)``` function, pass in the number of generations you would like your training session to run.
 
