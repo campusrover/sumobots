@@ -55,10 +55,33 @@ We experimented with both feed-forward as well as recurrent neural networks. Our
 #### The NEAT Algorithm
 We make use of the NeuroEvolution of Augmenting Toplogies (NEAT) algorithm [(Stanley and Miikkulainen, 2002)](https://ieeexplore.ieee.org/document/1004508) to evolve the structure of our neural networks. NEAT draws inspiration from biolgoy in that it encodes each neural network as a "genome" object. Each genome contains node and connection "genes" which encode for the neural network phenotype. We initialize a population of such genomes, each encoding for some number of random connections between input and output nodes according to the NEAT configuration parameters. In our sumobot application, genomes are then paired up according to a chosen pairing method and evaluated in the sumo wrestling ring. Payoffs are then assigned to each genome as fitness metrics according to the outcome of the fight. After the evaluation period is over and fitness values have been assigned to each genome, NEAT selects a fraction of the population of genomes to reproduce using genetic crossover. The size of this fraction is specified by the user in the NEAT configuration file. We used 0.2 for our trials. In addition to the diversity introduced to the population via genetic crossover, mutations are also introduced into the population after the reproduction phase. This new generation of genomes then returns to the evaluation period, and the cycle repeats for the specified number of generations.
 
-#### Coevolutionary Learning in Gazebo
+##### Species in NEAT
+The NEAT algorithm divides the population into multiple "species" during training according to genome similarity. Each genome is then only evaluated against other genomes within their own species, that is, similar genomes. This allows for new genetic innovations that might not be initially adaptive to nonetheless have a chance at "proving" themselves, so to speak, later on down the evolutionary road.
+
+#### Evolutionary Training in Gazebo
 Both reinforcement learning and evolutionary learning require assessing the state of one or more agents at each time step and assigning payoffs to the agent based on that state. To do this in the context of a Gazebo simulation, it is necessary to pause the simulation while this code is executing at each time step. Additionally, it is necessary to be able to reset the simulated world upon completion of the training task in order to begin the next episode of training. To accomplish this for our project, we adapted the GazeboConnection class from the [ROS OpenAI package](https://bitbucket.org/theconstructcore/openai_ros/src/kinetic-devel/). This class provides functions for pausing, unpausing, and resetting the Gazebo simulation that can be called at each time step of training. To this class we added a function for setting the state of each robot model, such that we could easily assign a randomized pose to each robot at the start of each fight.
 
 We adapted and simplified the MultiAgentEnv class from OpenAI's [multiagent particle environment](https://github.com/openai/multiagent-particle-envs) package for a strictly discrete action space and for use in Gazebo via integration with the aforementioned GazeboConnection class.
+
+#### Our Training Scheme
+##### Genome Pairing Techniques
+One of the variables we experimented with in our training scheme was the manner in which we went about pairing genomes during evaluation in the sumo ring. The following methods were tried:
+1. Randomized one-vs-one:
+- The population of genomes is shuffled, split in half, and the two sub-populations paired off accordingly.
+2. All-vs-all:
+- All possible unique combinations of genome pairs are assessed, and the payoffs across all fights averaged for determining fitness.
+3. All-vs-some:
+- Each genome plays against n other unique genomes.
+4. Intra-species pairing:
+- Each of the above three methods can be used for creating pairs within a single species of the population. This method pairs genomes from the same species, and thus genomes that are relatively similar to one another. We reasoned this would likely help avoid unfair match-ups between genomes of widely-varying adaptive capacity.
+
+Our final training scheme 
+Payoffs for the sumo wrestling task are assessed at each time step of the fight. Our original payoff scheme was as follows:
+1. Each robot is assigned a small negative payoff at each time step, so as to incentivize acting quickly in the fight.
+2. If a robot falls off the arena platform, they receive a large negative payoff, and the fight ends.
+3. If a robot's opponent falls off the arena platform, the receive a large positive payoff, and the fight ends.
+
+After this payoff scheme yielded
 
 ### Problems Encountered
 One of the problems we encountered during coevolutionary training was stagnation caused by the existence of Mediocre Stable States (MSS), a phenomenon that is well-documented within the coevolutionary literature [(Ficici and Pollack, 1998)](https://pdfs.semanticscholar.org/9979/ababa4100cf35afc1c8be8777326134d14fd.pdf). Specifically, our sumobots consistently got stuck with a strategy of simply remaining stationary throughout the entire fight. This was evidently due to the fact that any movement at all turned out to be too high a risk, that is, would too often result in the robot falling off the sumo arena platform. The solution we came up with was to modify our payoff assignments in two ways. Firstly, we explicitly incentivized movement toward one's opponent by assigning a negative payoff to each robot proportional with the distance between the robots. And secondly, we withheld any positive payoff from the winning robot if the winner was more than 1 meter away from the opponent at the moment when the opponent fell off the platform. These two changes worked together to incentivize active movement of the robots toward each other, and thereby make for a more interesting and exciting fight.
