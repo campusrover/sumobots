@@ -36,7 +36,7 @@ def play_winners(results_path):
 
 if __name__ == '__main__':
     rospy.init_node('sumo')
-    train(200)
+    train(50)
     #play_winners('../catkin_ws/src/sumobots/results/12092020_054242_300')
 
 

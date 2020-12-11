@@ -51,7 +51,7 @@ class SumoTrainer:
         self.save_results(self.best_genomes, num_gen)
 
     def fitness_function(self, genomes, config):
-        genome_pairs = self.pair_species_all_vs_all(genomes)
+        genome_pairs = self.pair_species_all_vs_some(genomes, 5)
         genome_dict = defaultdict(int)
         for genome_pair in genome_pairs:
             latest_fitnesses = self.eval_genome_pair(genome_pair, config)
@@ -65,6 +65,7 @@ class SumoTrainer:
                     g.fitness = (g.fitness * n + latest_fitnesses[i]) / (n + 1)
                 genome_dict[g] += 1
         genomes = [g[1] for g in genomes]
+        print([g.fitness for g in genomes])
         if not all([g.fitness is None for g in genomes]):
             self.update_best_genomes(genomes)
 
@@ -100,6 +101,19 @@ class SumoTrainer:
         return izip_longest(genomes[0:(len(genomes) // 2)], genomes[(len(genomes) // 2):],
                             fillvalue=genomes[0])
 
+    def pair_all_vs_some(self, genomes, n):
+        random.shuffle(genomes)
+        genome_pairs = []
+        i = 0
+        j = n
+        while j <= len(genomes) and len(genomes) - j != 1:
+            genome_pairs.extend(self.pair_all_vs_all(genomes[i:j]))
+            i += n
+            j += n
+        genome_pairs.extend(self.pair_all_vs_all(genomes[i:]))
+        return genome_pairs
+
+
     def pair_species_all_vs_all(self, genomes):
         genomes_grouped = self.group_genomes_by_species(genomes)
         genome_pairs = []
@@ -112,6 +126,13 @@ class SumoTrainer:
         genome_pairs = []
         for gs in genomes_grouped:
             genome_pairs.extend(self.pair_one_vs_one(gs))
+        return genome_pairs
+
+    def pair_species_all_vs_some(self, genomes, n):
+        genomes_grouped = self.group_genomes_by_species(genomes)
+        genome_pairs = []
+        for gs in genomes_grouped:
+            genome_pairs.extend(self.pair_all_vs_some(gs, n))
         return genome_pairs
 
     def group_genomes_by_species(self, genomes):

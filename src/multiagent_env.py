@@ -5,8 +5,6 @@ from std_srvs.srv import Empty
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from gazebo_connection import GazeboConnection
-from gazebo_msgs.msg import ModelState 
-from gazebo_msgs.srv import SetModelState
 from tf.transformations import quaternion_from_euler
 
 '''
@@ -48,10 +46,10 @@ class MultiAgentGazeboEnv():
         done_n = []
         info_n = {'n': []}
 
-        self.gazebo.unpauseSim()
+        self.gazebo.unpause_sim()
         for i, action in enumerate(action_n):
             self._set_action(action, i)
-        self.gazebo.pauseSim()
+        self.gazebo.pause_sim()
 
         # record observation, etc. for each agent
         for i, _ in enumerate(action_n):
@@ -64,25 +62,17 @@ class MultiAgentGazeboEnv():
 
     def reset(self):
         # Resets the state of the environment and returns an initial observation.
-        state_msg = ModelState()
-        set_state = rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
         for i in range(self.num_agents):
-            state_msg.model_name = 'Robot%d' % (i + 1)
-            state_msg.pose.position.x = random.uniform(-1.2, 1.2)
-            state_msg.pose.position.y = random.uniform(-1.2, 1.2)
-            state_msg.pose.position.z = 0.35
-            quaternion = quaternion_from_euler(0, 0, random.uniform(0, 6.28))
-            state_msg.pose.orientation.x = quaternion[0]
-            state_msg.pose.orientation.y = quaternion[1]
-            state_msg.pose.orientation.z = quaternion[2]
-            state_msg.pose.orientation.w = quaternion[3]
-            rospy.wait_for_service('/gazebo/set_model_state')
-            try:
-                set_state(state_msg)
-            except rospy.ServiceException, e:
-                print('Service call failed: %s' % e)
-        self.gazebo.unpauseSim()
-        self.gazebo.pauseSim()
+            model_name = 'Robot%d' % (i + 1)
+            x = random.uniform(-1.2, 1.2)
+            y = random.uniform(-1.2, 1.2)
+            z = 0.35
+            q = quaternion_from_euler(0, 0, random.uniform(0, 6.28))
+            pose = [x, y, z]
+            pose.extend(q)
+            self.gazebo.set_model_state(model_name, pose)
+        self.gazebo.unpause_sim()
+        self.gazebo.pause_sim()
         obs_n = []
         for i in range(self.num_agents):
             obs_n.append(self._get_obs(i))
