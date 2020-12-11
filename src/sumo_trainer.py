@@ -111,9 +111,7 @@ class SumoTrainer:
         genomes_grouped = self.group_genomes_by_species(genomes)
         genome_pairs = []
         for gs in genomes_grouped:
-            random.shuffle(gs)
-            genome_pairs.extend(izip_longest(gs[0:(len(gs) // 2)], gs[(len(gs) // 2):],
-                                fillvalue=gs[0]))
+            genome_pairs.extend(self.pair_one_vs_one(gs))
         return genome_pairs
 
     def group_genomes_by_species(self, genomes):
@@ -121,7 +119,7 @@ class SumoTrainer:
         species_ids = [self.population.species.get_species_id(i) for i in genome_ids]
         genome_species_map = zip(genomes, species_ids)
         species_unique_ids = set(species_ids)
-        genomes_grouped = [[y[0][1] for y in genome_species_map if y[1]==x] for x in species_unique_ids]
+        genomes_grouped = [[y for y in genome_species_map if y[1]==x] for x in species_unique_ids]
         return genomes_grouped
 
     def update_best_genomes(self, genomes):
