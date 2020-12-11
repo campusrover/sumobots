@@ -39,6 +39,14 @@ Each of our robots is controlled by a neural network. Our networks map from a co
 2. The direction in radians of the center of the sumo arena relative to the robot's orientation.
 3. The distance between the robot and its opponent.
 4. The direction in radians of the robot's opponent relative to the robot's orientation.
+These relative coordinate values are obtained using the ROS transform. This technique is notably limited and likely unworkable in a real-world environment, but nevertheless works well within a Gazebo simulated environment.
+Our action space consists of the following four discrete actions:
+1. Move forward at 2.0 m/s
+2. Move backward at 2.0 m/s
+3. Rotate left at 2.0 rad/s
+4. Rotate right at 2.0 rad/s
+Importantly, our actions are not one-hot vectors, but rather allow for any combination of movement using the above four actions.
+Our networks use sigmoid activation functions, but other activation functions are readily available within the NEAT package.
 
 #### The NEAT Algorithm
 We make use of the NeuroEvolution of Augmenting Toplogies (NEAT) algorithm [(Stanley and Miikkulainen, 2002)](https://ieeexplore.ieee.org/document/1004508) to evolve the structure of our neural networks. NEAT draws inspiration from biolgoy in that it encodes each neural network as a "genome" object. Each genome contains node and connection "genes" which encode for the neural network phenotype. We initialize a population of such genomes, each with some number of random connections between input and output nodes according to the NEAT configuration parameters. 
