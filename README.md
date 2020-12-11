@@ -40,6 +40,7 @@ Now you can launch again using the command ```$ roslaunch sumobots arena.launch`
     2. [Relevant Literature](#literature)
 2. [What Was Created](#whatwascreated)
     1. [Technical Descriptions and Illustrations](#technical)
+        1. [Robot and Arena Models](#models)
     2. [Algorithms, Modules, and Techniques](#algorithms)
         1. [Neural Network](#neuralnetwork)
         2. [The NEAT Algorithm](#neatalgorithm)
@@ -61,7 +62,8 @@ The objective of this project was to design an autonomous robot in the style of 
 We make use of the NeuroEvolution of Augmenting Topologies (NEAT) algorithm [(Stanley and Miikkulainen, 2002)](https://ieeexplore.ieee.org/document/1004508) to evolve our neural network topologies. Other papers that informed our process include [(Ficici and Pollack, 1998)](https://pdfs.semanticscholar.org/9979/ababa4100cf35afc1c8be8777326134d14fd.pdf), specifically their work on the problem of "Mediocre Stable States" within competitive coevolution. 
 <a name="whatwascreated"></a>
 ## What Was Created <a name="technical"></a>
-### Technical Descriptions and Illustrations 
+### Technical Descriptions and Illustrations <a name="models"></a>
+#### Robot and Arena Models
 ![An arena with two sumobots](https://i.imgur.com/OFNZExb.jpg)
 The first model we created was an arena in Gazebo on which the robots could fight, seen above. The arena is a 1.5m radius by 0.3m tall cylinder with a blue ring surrounding it which is 0.1m thick; the blue ring was created for the possibility of adapting this setup to use data from the camera on the sumobot. This surface of the arena is similar to any generic hard surface with an average amount of friction.
 ![A closeup of one sumobot](https://i.imgur.com/tMIMyfb.jpeg)
