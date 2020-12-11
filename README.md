@@ -80,9 +80,11 @@ The design of payoffs is of utmost importance to successful evolutionary trainin
 After this payoff scheme yielded unimpressive results, we modified it as follows:
 1. Each robot is assigned a small negative payoff at each time step proportional to their distance in space from their opponent, so as to incentivize movement toward one's opponent.
 2. Same as before.
-3. If a robot's opponent falls of the arena platform, they receive a large positive payoff as before, but only if within 1 meter of their opponent at the final time step, so as to withhold reward from robots that simply happened to be paired with a self-destructive opponent.
+3. If a robot's opponent falls off the arena platform, they receive a large positive payoff as before, but only if within 1 meter of their opponent at the final time step, so as to withhold reward from robots that simply happened to be paired with a self-destructive opponent.
 
 ### Problems Encountered
+The single biggest challenge of this project was the time constraint, simply due to how much time is required for training. Even with a virtual cloud desktop with 8 CPU cores, the Gazebo real time factor lingered around a value of about 2. Attempts to improve this by increasing the maximum time step of our simulation altered the physics of the simulation too heavily.
+
 One of the problems we encountered during coevolutionary training was stagnation caused by the existence of Mediocre Stable States (MSS), a phenomenon that is well-documented within the coevolutionary literature [(Ficici and Pollack, 1998)](https://pdfs.semanticscholar.org/9979/ababa4100cf35afc1c8be8777326134d14fd.pdf). Specifically, our sumobots consistently got stuck with a strategy of simply remaining stationary throughout the entire fight. This was evidently due to the fact that any movement at all turned out to be too high a risk, that is, would too often result in the robot falling off the sumo arena platform. The solution we came up with was to modify our payoff assignments in two ways. Firstly, we explicitly incentivized movement toward one's opponent by assigning a negative payoff to each robot proportional with the distance between the robots. And secondly, we withheld any positive payoff from the winning robot if the winner was more than 1 meter away from the opponent at the moment when the opponent fell off the platform. These two changes worked together to incentivize active movement of the robots toward each other, and thereby make for a more interesting and exciting fight.
 
 ## Reflections
