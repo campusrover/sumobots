@@ -39,7 +39,9 @@ Each of our robots is controlled by a neural network. Our networks map from a co
 2. The direction in radians of the center of the sumo arena relative to the robot's orientation.
 3. The distance between the robot and its opponent.
 4. The direction in radians of the robot's opponent relative to the robot's orientation.
+
 These relative coordinate values are obtained using the ROS transform. This technique is notably limited and likely unworkable in a real-world environment, but nevertheless works well within a Gazebo simulated environment.
+
 Our action space consists of the following four discrete actions:
 1. Move forward at 2.0 m/s
 2. Move backward at 2.0 m/s
@@ -49,7 +51,7 @@ Importantly, our actions are not one-hot vectors, but rather allow for any combi
 Our networks use sigmoid activation functions, but other activation functions are readily available within the NEAT package.
 
 #### The NEAT Algorithm
-We make use of the NeuroEvolution of Augmenting Toplogies (NEAT) algorithm [(Stanley and Miikkulainen, 2002)](https://ieeexplore.ieee.org/document/1004508) to evolve the structure of our neural networks. NEAT draws inspiration from biolgoy in that it encodes each neural network as a "genome" object. Each genome contains node and connection "genes" which encode for the neural network phenotype. We initialize a population of such genomes, each with some number of random connections between input and output nodes according to the NEAT configuration parameters. 
+We make use of the NeuroEvolution of Augmenting Toplogies (NEAT) algorithm [(Stanley and Miikkulainen, 2002)](https://ieeexplore.ieee.org/document/1004508) to evolve the structure of our neural networks. NEAT draws inspiration from biolgoy in that it encodes each neural network as a "genome" object. Each genome contains node and connection "genes" which encode for the neural network phenotype. We initialize a population of such genomes, each encoding for some number of random connections between input and output nodes according to the NEAT configuration parameters. In our sumobot application, genomes are then paired up according to a chosen pairing method and evaluated in the sumo wrestling ring. Payoffs are then assigned to each genome as fitness metrics according to the outcome of the fight. After the evaluation period is over and fitness values have been assigned to each genome, NEAT selects a fraction of the population of genomes to reproduce using genetic crossover. The size of this fraction is specified by the user in the NEAT configuration file. We used 0.2 for our trials. In addition to the diversity introduced to the population via genetic crossover, mutations are also introduced into the population after the reproduction phase. This new generation of genomes then returns to the evaluation period, and the cycle repeats for the specified number of generations.
 
 ### Problems Encountered
 A problem we encountered during the 
