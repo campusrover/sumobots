@@ -41,7 +41,7 @@ Now you can launch again using the command ```$ roslaunch sumobots arena.launch`
 2. [What Was Created](#whatwascreated)
     1. [Technical Descriptions and Illustrations](#technical)
         1. [Robot and Arena Models](#models)
-    2. [Algorithms, Modules, and Techniques](#algorithms)
+    2. [Algorithms, Modules, Techniques](#algorithms)
         1. [Neural Network](#neuralnetwork)
         2. [The NEAT Algorithm](#neatalgorithm)
             1. [Species in NEAT](#speciesneat)
@@ -111,6 +111,16 @@ One of the variables we experimented with in our training scheme was the manner 
 2. All-vs-all: All possible unique combinations of genome pairs are assessed, and the payoffs across all fights averaged for determining fitness.
 3. All-vs-some: each genome plays against n other unique genomes.
 4. Intra-species pairing: This method pairs genomes from the same species using one of the above three methods, and thus only pairs genomes that are relatively similar to one another.
+
+The first technique is the fastest, since each genome is only paired once in each generation. However, it also gives the poorest sence of each genome's true adaptive capacity, because each is only given one chance to fight. Any genome that happens to be paired up with a particularly self-destructive genome is going to be assigned a high fitness value that does not reflect its true skill level.
+
+The second technique affords a much more representative evaluation of each genome, since each genome is paired up with every other genome in the population and the payoffs averaged across all runs. However, such a pairing scheme takes considerable time to run, and is thus often impractical for any considerably sized population.
+
+The third pairing technique attempts to get the best of both the first and second methods, by pairing each genome with only a few other genomes. That way, fitness values are more representative of a genome's true adaptivity since they will be the averaged result across several fights, but will nevertheless keep the training time down by limiting each genome to only a small number of opponent match-ups.
+
+The fourth and final pairing technique makes use of NEAT's speciation feature. By only pairing genomes from the same species together, this ensures a more fair fight, since genomes within the same species are more similar than those outside the species. By ensuring each pairing is of a relatively similar skill level, we are more likely to maintain a meaningful learning gradient for each genome to evolve along. The alternative is a problem in which one genome so far outperforms its opponent, that there is no chance for the opponent to find whatever learning gradient might otherwise be there to find.
+
+Based on the explanation we've presented here, we recommend using the intra-species all-vs-some pairing method in future training runs.
 <a name="payoffs"></a>
 ##### Assigning Payoffs
 The design of payoffs is of utmost importance to successful evolutionary training. Our original payoff scheme was as follows:
@@ -122,16 +132,24 @@ After this payoff scheme yielded unimpressive results, we modified it as follows
 1. Each robot is assigned a small negative payoff at each time step proportional to their distance in space from their opponent, so as to incentivize movement toward one's opponent.
 2. Same as before.
 3. If a robot's opponent falls off the arena platform, they receive a large positive payoff as before, but only if within 1 meter of their opponent at the final time step, so as to withhold reward from robots that simply happened to be paired with a self-destructive opponent.
+<a name="spawning"></a>
+##### Spawning
+Our initial approach was to spawn each robot in the same pose for each fight: on opposite sides of the arena facing one another. However, toward the end of the project we realized this was likely leading to behavior that depended on this initial pose in order to be adaptive. As an alternative, we introduced random spawning for each fight, assigning a random pose to each robot. However, due to the time constraints of the project, we were unable to run a robust set of experiments using this method. This is discussed more in the following section.
 <a name="problemsencountered"></a>
 ### Problems Encountered
-The single biggest challenge of this project was the time constraint, simply due to how much time is required for training. Even with a virtual cloud desktop with 8 CPU cores, the Gazebo real time factor lingered around a value of about 2. Attempts to improve this by increasing the maximum time step of our simulation altered the physics of the simulation too heavily. Thus, training often took multiple days to perform.
+The single biggest challenge of this project was the time constraint, simply due to how much time is required for training. Even with a virtual cloud desktop with 8 CPU cores, the Gazebo real time factor lingered around a value of 2. Attempts to improve this by increasing the maximum step size of our simulation altered the physics of the simulation too heavily. Thus, training often took multiple days to perform, making experimentation and broad-scale debugging extremely time consuming.
 
-A problem encountered during the creation of the robot models was this issue of surface type on each robot. We ideally wanted the robots to collide into each other and bounce off as they would in real life however this was incredibly difficult to create in Gazebo. As an aside, please refer to our [lab notebook contribution on creating bouncy surfaces in Gazebo](https://campus-rover.gitbook.io/lab-notebook/miscellaneous/bouncy-objects) to see how we made sure the robots always collide perfectly elastically. This however doesn't solve our issue because Gazebo doesn't simulate kinetic friction any different from static friction so what happens is if the robots have enough traction to drive forward at one another, they have enough friction to resist that motion in the opposite direction. The solution we created was to have the robots have a much weaker coefficient of friction in the horizontal direction so they are able to easily push each other side to side and not forwards and backwards.
+A problem encountered during the creation of the robot models was the issue of surface type on each robot. We ideally wanted the robots to collide into each other and bounce off as they would in real life, however this was incredibly difficult to create in Gazebo. As an aside, please refer to our [lab notebook contribution](https://campus-rover.gitbook.io/lab-notebook/miscellaneous/bouncy-objects) on creating bouncy surfaces in Gazebo to see how we made sure the robots always collide perfectly elastically. This however doesn't solve our issue because Gazebo doesn't simulate kinetic friction any different from static friction, so what happens is if the robots have enough traction to drive forward at one another, they have enough friction to resist that motion in the opposite direction. The solution we created was to have the robots have a much weaker coefficient of friction in the lateral direction so they are able to easily push each other side to side, even if not forwards and backwards.
 
-One of the problems we encountered during coevolutionary training was stagnation caused by the existence of Mediocre Stable States (MSS), a phenomenon that is well-documented within the coevolutionary literature [(Ficici and Pollack, 1998)](https://pdfs.semanticscholar.org/9979/ababa4100cf35afc1c8be8777326134d14fd.pdf). Specifically, our sumobots consistently got stuck with a strategy of simply remaining stationary throughout the entire fight. This was evidently due to the fact that any movement at all turned out to be too high a risk, that is, would too often result in the robot falling off the sumo arena platform. The solution we came up with was to modify our payoff assignments in two ways. Firstly, we explicitly incentivized movement toward one's opponent by assigning a negative payoff to each robot proportional with the distance between the robots. And secondly, we withheld any positive payoff from the winning robot if the winner was more than 1 meter away from the opponent at the moment when the opponent fell off the platform. These two changes worked together to incentivize active movement of the robots toward each other, and thereby make for a more interesting and exciting fight.
+A problem we encountered during coevolutionary training was stagnation caused by the existence of Mediocre Stable States (MSS), a phenomenon that is well-documented within the coevolutionary literature [(Ficici and Pollack, 1998)](https://pdfs.semanticscholar.org/9979/ababa4100cf35afc1c8be8777326134d14fd.pdf). Specifically, our sumobots often appeared to oscillate between two mediocre states: that of remaining entirely stationary, and that of constant forward motion. The former we attribute to the high risk involved in any movement whatsoever. In the event that no viable movement in response to the robot's environment can be found, the genomes selected for are those that play it most safe (i.e. those that don't move at all). As for the latter, this behavior only arises when our spawning method was consistent for each fight, that is, when we spawn each robot on opposite sides of the arena and facing one another. From here, direct forward motion often leads to forcing one's opponent out of the ring. In fact, we found that when both robots employ this simple strategy of constant forward motion, the result is actually quite an entertaining fight. That being said, there is obviously nothing remotely intelligent about such behavior.
+
+Toward the end of the project, we modified our spawning method to randomize the initial pose of each robot for each fight. We hoped this would lead to more robust behavior, rather than behavior that relies on a given starting pose in order to be successful. However, more experimentation is needed to test this hypothesis.
+
+One avenue we explored briefly was the idea of simulating multiple fights simultaneously using parallel processing. However, the time constraints on our project did not allow us to realize this improvement, which would have sped up training considerably. We recommend looking into this possibility for anyone who wishes to build upon our work.
+
 <a name="reflections"></a>
 ## Reflections
-In the end, we are very proud of the work we put together during this project. Not only did we learn an incredible amount about such a complex field, we created the base for vastly more complex projects to come. We solved countless problems we couldn't have even imagined we would encounter, we dove headfirst into research on fascinating topics, and we came away feeling like we created something we can be proud of.
+In the end, we are very proud of the work we put together during this project. Not only did we learn an incredible amount about a complex field, we created the base for vastly more complex projects to come. We solved countless problems we couldn't have even imagined we would encounter, we dove headfirst into research on fascinating topics, and we came away feeling like we created something we can be proud of.
 
 We worked really well together, divided work between us well, and tackled our own challenges with the level of detail required while being able to support the other when they became truly stuck on something. We entered this project with two very different ideas about what we wanted to research and were able to combine our ideas into a single, much more interesting, project.
 
@@ -140,17 +158,3 @@ While we are obviously disappointed that we never saw an absolutely dominant sum
 ## References
 1. K. O. Stanley and R. Miikkulainen, "Efficient evolution of neural network topologies," Proceedings of the 2002 Congress on Evolutionary Computation. CEC'02 (Cat. No.02TH8600), Honolulu, HI, USA, 2002, pp. 1757-1762 vol.2, doi: 10.1109/CEC.2002.1004508.
 2. S. Ficici and J. B. Pollack, "Challenges in Coevolutionary Learning: Arms-Race Dynamics, Open-Endedness, and Mediocre Stable States," Proceedings of the Sixth International Conference on Artificial Life. MIT Press.
-
-@INPROCEEDINGS{1004508,  author={K. O. {Stanley} and R. {Miikkulainen}},  booktitle={Proceedings of the 2002 Congress on Evolutionary Computation. CEC'02 (Cat. No.02TH8600)},   title={Efficient evolution of neural network topologies},   year={2002},  volume={2},  number={},  pages={1757-1762 vol.2},  doi={10.1109/CEC.2002.1004508}}
-
-@INPROCEEDINGS{Ficici98challengesin,
-    author = {Sevan Ficici and Jordan B. Pollack},
-    title = {Challenges in Coevolutionary Learning: Arms-Race Dynamics, Open-Endedness, and Mediocre Stable States},
-    booktitle = {Proceedings of the Sixth International Conference on Artificial Life},
-    year = {1998},
-    pages = {238--247},
-    publisher = {MIT Press}
-}
-
-
-
