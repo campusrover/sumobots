@@ -6,9 +6,11 @@ from gazebo_msgs.msg import ODEPhysics
 from gazebo_msgs.srv import SetPhysicsProperties, SetPhysicsPropertiesRequest
 from std_msgs.msg import Float64
 from geometry_msgs.msg import Vector3
+from gazebo_msgs.msg import ModelState 
+from gazebo_msgs.srv import SetModelState
 
 '''
-Imported from the ROS OpenAI package (linked below). The GazeboConnection class handles pausing,
+Adapted from the ROS OpenAI package (linked below). The GazeboConnection class handles pausing,
 unpausing, and resetting of the Gazebo simulation during a training task.
 
 ------------------- https://bitbucket.org/theconstructcore/openai_ros.git --------------------
@@ -23,6 +25,7 @@ class GazeboConnection():
         self.pause = rospy.ServiceProxy('/gazebo/pause_physics', Empty)
         self.reset_simulation_proxy = rospy.ServiceProxy('/gazebo/reset_simulation', Empty)
         self.reset_world_proxy = rospy.ServiceProxy('/gazebo/reset_world', Empty)
+        self.set_model_state_proxy = rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
 
         # Setup the Gravity Controle system
         service_name = '/gazebo/set_physics_properties'
@@ -35,9 +38,9 @@ class GazeboConnection():
         self.reset_world_or_sim = reset_world_or_sim
         self.init_values()
         # We always pause the simulation, important for legged robots learning
-        self.pauseSim()
+        self.pause_sim()
 
-    def pauseSim(self):
+    def pause_sim(self):
         rospy.logdebug("PAUSING START")
         rospy.wait_for_service('/gazebo/pause_physics')
         rospy.logdebug("PAUSING service found...")
@@ -60,7 +63,7 @@ class GazeboConnection():
 
         rospy.logdebug("PAUSING FINISH")
 
-    def unpauseSim(self):
+    def unpause_sim(self):
         rospy.logdebug("UNPAUSING START")
         rospy.wait_for_service('/gazebo/unpause_physics')
         rospy.logdebug("UNPAUSING service found...")
@@ -84,7 +87,7 @@ class GazeboConnection():
         rospy.logdebug("UNPAUSING FiNISH")
 
 
-    def resetSim(self):
+    def reset_sim(self):
         """
         This was implemented because some simulations, when reseted the simulation
         the systems that work with TF break, and because sometime we wont be able to change them
@@ -93,33 +96,47 @@ class GazeboConnection():
         """
         if self.reset_world_or_sim == "SIMULATION":
             rospy.logdebug("SIMULATION RESET")
-            self.resetSimulation()
+            self.reset_simulation()
         elif self.reset_world_or_sim == "WORLD":
             rospy.logdebug("WORLD RESET")
-            self.resetWorld()
+            self.reset_world()
         elif self.reset_world_or_sim == "NO_RESET_SIM":
             rospy.logdebug("NO RESET SIMULATION SELECTED")
         else:
             rospy.logdebug("WRONG Reset Option:"+str(self.reset_world_or_sim))
 
-    def resetSimulation(self):
+    def reset_simulation(self):
         rospy.wait_for_service('/gazebo/reset_simulation')
         try:
             self.reset_simulation_proxy()
         except rospy.ServiceException as e:
             print ("/gazebo/reset_simulation service call failed")
 
-    def resetWorld(self):
+    def reset_world(self):
         rospy.wait_for_service('/gazebo/reset_world')
         try:
             self.reset_world_proxy()
         except rospy.ServiceException as e:
             print ("/gazebo/reset_world service call failed")
 
+    def set_model_state(self, model_name, pose):
+        state_msg = ModelState()
+        state_msg.model_name = model_name
+        state_msg.pose.position.x = pose[0]
+        state_msg.pose.position.y = pose[1]
+        state_msg.pose.position.z = pose[2]
+        state_msg.pose.orientation.x = pose[3]
+        state_msg.pose.orientation.y = pose[4]
+        state_msg.pose.orientation.z = pose[5]
+        state_msg.pose.orientation.w = pose[6]
+        rospy.wait_for_service('/gazebo/set_model_state')
+        try:
+            self.set_model_state_proxy(state_msg)
+        except rospy.ServiceException as e:
+                print('gazebo/set_model_state service call failed: %s' % e)
+
     def init_values(self):
-
-        self.resetSim()
-
+        self.reset_sim()
         if self.start_init_physics_parameters:
             rospy.logdebug("Initialising Simulation Physics Parameters")
             self.init_physics_parameters()
@@ -156,7 +173,7 @@ class GazeboConnection():
 
     def update_gravity_call(self):
 
-        self.pauseSim()
+        self.pause_sim()
 
         set_physics_request = SetPhysicsPropertiesRequest()
         set_physics_request.time_step = self._time_step.data
@@ -169,7 +186,7 @@ class GazeboConnection():
         result = self.set_physics(set_physics_request)
         rospy.logdebug("Gravity Update Result==" + str(result.success) + ",message==" + str(result.status_message))
 
-        self.unpauseSim()
+        self.unpause_sim()
 
     def change_gravity(self, x, y, z):
         self._gravity.x = x
