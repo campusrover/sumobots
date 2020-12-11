@@ -2,7 +2,7 @@
 
 
 ## About
-This project is an attempt to apply concepts from within the field of coevolution to evolve complex robot behavior in the context of a "sumo" fighting ring. Specifically, this project uses the NeuroEvolution of Augmenting Topologies (NEAT) algorithm to evolve the structure of neural networks used to control our sumobots.
+This project is an attempt to apply concepts from within the field of coevolution to evolve complex robot behavior in the context of a "sumo" fighting ring. Specifically, this project uses the NeuroEvolution of Augmenting Topologies (NEAT) algorithm to evolve the structure of neural networks used to control our sumobots. Click [here](https://youtu.be/DfJWQu9lygw) to watch a short video about our project.
 
 ## Dependencies
 - Python 2.7
@@ -12,6 +12,27 @@ This project is an attempt to apply concepts from within the field of coevolutio
   - ```$ pip install neat-python```
 - Graphviz
   - ```$ pip install graphviz```
+
+## How To Run
+### Training
+There are a few things that need to be changed when beginning a new training session.
+
+First you will need to select the size of your population you want to train; go to ```src/config``` and change the ```pop_size``` parameter to be the size of population you want.
+
+Next, go to ```src/main.py``` and at the bottom make sure to comment out the ```play_winners(...)``` line and uncomment the ```train(...)``` line. As an argument for the ```train(...)``` function, pass in the number of generations you would like your training session to run.
+
+Next, go to the ```src/sumo_trainer.py``` file and notice the first line of the ```fitness_function(self, genomes, config):``` method calls a method of pairing starting with the word ```pair```, this describes how robots will be matched up to fight each generation; feel free to pick another one of the ```pair_...``` methods from the ```sumo_trainer.py``` file and insert it there if you would like.
+
+Once all of that is set up, go ahead navigate in your Unix shell to the ```sumobots``` directory.
+
+Use the command ```$ roslaunch sumobots arena.launch``` to begin the simulation.
+
+Once it is all up and running, click the play button at the bottom of Gazebo and minimize the Gazebo simulator, and the shell will notify you as each generation goes by.
+
+### Playing Winners
+Once you have evolved a robot, you can watch the two best genomes from your learning battle each other. Go back to ```src/main.py``` and comment out the ```train(...)``` line at the bottom. In the results folder you will find a new subdirectory specified by the date, time, and number of generations of your run. Copy that subdirectory name and paste it in the now uncommented ```play_winners(...)``` line as follows: ```play_winners('../catkin_ws/src/sumobots/results/[YOUR_RESULT_SUBDIRECTORY]')```
+
+Now you can launch again using the command ```$ roslaunch sumobots arena.launch``` to watch the best robots fight.
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -85,10 +106,16 @@ After this payoff scheme yielded unimpressive results, we modified it as follows
 ### Problems Encountered
 The single biggest challenge of this project was the time constraint, simply due to how much time is required for training. Even with a virtual cloud desktop with 8 CPU cores, the Gazebo real time factor lingered around a value of about 2. Attempts to improve this by increasing the maximum time step of our simulation altered the physics of the simulation too heavily. Thus, training often took multiple days to perform.
 
+A problem encountered during the creation of the robot models was this issue of surface type on each robot. We ideally wanted the robots to collide into each other and bounce off as they would in real life however this was incredibly difficult to create in Gazebo. As an aside, please refer to our [lab notebook contribution on creating bouncy surfaces in Gazebo](https://campus-rover.gitbook.io/lab-notebook/miscellaneous/bouncy-objects) to see how we made sure the robots always collide perfectly elastically. This however doesn't solve our issue because Gazebo doesn't simulate kinetic friction any different from static friction so what happens is if the robots have enough traction to drive forward at one another, they have enough friction to resist that motion in the opposite direction. The solution we created was to have the robots have a much weaker coefficient of friction in the horizontal direction so they are able to easily push each other side to side and not forwards and backwards.
+
 One of the problems we encountered during coevolutionary training was stagnation caused by the existence of Mediocre Stable States (MSS), a phenomenon that is well-documented within the coevolutionary literature [(Ficici and Pollack, 1998)](https://pdfs.semanticscholar.org/9979/ababa4100cf35afc1c8be8777326134d14fd.pdf). Specifically, our sumobots consistently got stuck with a strategy of simply remaining stationary throughout the entire fight. This was evidently due to the fact that any movement at all turned out to be too high a risk, that is, would too often result in the robot falling off the sumo arena platform. The solution we came up with was to modify our payoff assignments in two ways. Firstly, we explicitly incentivized movement toward one's opponent by assigning a negative payoff to each robot proportional with the distance between the robots. And secondly, we withheld any positive payoff from the winning robot if the winner was more than 1 meter away from the opponent at the moment when the opponent fell off the platform. These two changes worked together to incentivize active movement of the robots toward each other, and thereby make for a more interesting and exciting fight.
 
 ## Reflections
+In the end, we are very proud of the work we put together during this project. Not only did we learn an incredible amount about such a complex field, we created the base for vastly more complex projects to come. We solved countless problems we couldn't have even imagined we would encounter, we dove headfirst into research on fascinating topics, and we came away feeling like we created something we can be proud of.
 
+We worked really well together, divided work between us well, and tackled our own challenges with the level of detail required while being able to support the other when they became truly stuck on something. We entered this project with two very different ideas about what we wanted to research and were able to combine our ideas into a single, much more interesting, project.
+
+While we are obviously disappointed that we never saw an absolutely dominant sumobot, we hope that we are able to build off of all the work we have done to eventually see a robot which could best any manually programmed sumobot created. The framework is already built to continue researching this topic and we hope the results from this project only continue to expand.
 
 ## References
 1. K. O. Stanley and R. Miikkulainen, "Efficient evolution of neural network topologies," Proceedings of the 2002 Congress on Evolutionary Computation. CEC'02 (Cat. No.02TH8600), Honolulu, HI, USA, 2002, pp. 1757-1762 vol.2, doi: 10.1109/CEC.2002.1004508.
