@@ -1,5 +1,8 @@
 # Coevolved Sumobots
 
+## Authors
+August Soderberg
+Joseph Pickens
 
 ## About
 This project is an attempt to apply concepts from the field of coevolution to evolve complex robot behavior in the context of a "sumo" fighting ring. Specifically, this project uses the NeuroEvolution of Augmenting Topologies (NEAT) algorithm to evolve the structure of neural networks used to control our sumobots. Click <a href="https://youtu.be/DfJWQu9lygw" target="_blank">here</a> to watch a short video summary of our project.
