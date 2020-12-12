@@ -75,9 +75,9 @@ The second task we had was to create the sumobot itself. The sumobot was canniba
 ### Algorithms, Modules, Techniques <a name="neuralnetwork"></a>
 #### Neural Network 
 Each of our robots is controlled by a neural network. Our networks map from a continuous observation space to a discrete action space. Our observation space consists of the following four observations:
-1. The distance between the robot and the center of the sumo arena.
+1. The distance in meters between the robot and the center of the sumo arena.
 2. The direction in radians of the center of the sumo arena relative to the robot's orientation.
-3. The distance between the robot and its opponent.
+3. The distance in meters between the robot and its opponent.
 4. The direction in radians of the robot's opponent relative to the robot's orientation.
 
 These relative coordinate values are obtained using the ROS transform. This technique is notably limited and likely unworkable in a real-world environment, but nevertheless works well within a Gazebo simulated environment.
