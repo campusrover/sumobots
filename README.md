@@ -1,4 +1,6 @@
 # Coevolved Sumobots
+## Github Pages
+https://campusrover.github.io/sumobots/
 
 ## Authors
 August Soderberg, Joseph Pickens
